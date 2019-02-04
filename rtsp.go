@@ -2,8 +2,10 @@ package rtsp
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"net/textproto"
@@ -141,7 +143,7 @@ type Request struct {
 	ProtoMajor    int
 	ProtoMinor    int
 	Header        http.Header
-	ContentLength int
+	ContentLength int64
 	Body          io.ReadCloser
 }
 
@@ -327,9 +329,10 @@ func ReadRequest(r io.Reader) (req *Request, err error) {
 	}
 	req.Header = http.Header(header)
 
-	req.ContentLength, _ = strconv.Atoi(req.Header.Get("Content-Length"))
-	fmt.Println("Content Length:", req.ContentLength)
-	req.Body = closer{b, r}
+	req.ContentLength, req.Body, err = readBody(req.Header, b)
+	if err != nil {
+		return nil, err
+	}
 	return req, nil
 }
 
@@ -388,8 +391,27 @@ func ReadResponse(r io.Reader) (res *Response, err error) {
 	}
 	res.Header = http.Header(header)
 
-	res.ContentLength, _ = strconv.ParseInt(res.Header.Get("Content-Length"), 10, 64)
+	// read the body
+	res.ContentLength, res.Body, err = readBody(res.Header, b)
+	if err != nil {
+		return nil, err
+	}
 
-	res.Body = closer{b, r}
 	return
+}
+
+func readBody(h http.Header, r *bufio.Reader) (int64, io.ReadCloser, error) {
+	if cl := h.Get("Content-Length"); cl != "" {
+		length, err := strconv.ParseInt(cl, 10, 64)
+		if err != nil {
+			return 0, nil, fmt.Errorf("invalid Content-Length: %v", err)
+		}
+		body := make([]byte, length)
+		if _, err := r.Read(body); err != nil {
+			return 0, nil, err
+		}
+		return length, ioutil.NopCloser(bytes.NewReader(body)), nil
+	}
+
+	return -1, http.NoBody, nil
 }
