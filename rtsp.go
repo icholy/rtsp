@@ -197,14 +197,20 @@ func NewRequest(method, urlStr string, cSeq int, body io.ReadCloser) (*Request, 
 	return req, nil
 }
 
+type Auth interface {
+	Authorize(*Request) error
+	Handle(*Response) error
+}
+
 type Session struct {
+	auth    Auth
 	cSeq    int
 	conn    net.Conn
 	reader  *bufio.Reader
 	session string
 }
 
-func NewSession() *Session {
+func NewSession(auth Auth) *Session {
 	return &Session{}
 }
 
@@ -231,10 +237,24 @@ func (s *Session) Do(req *Request) (*Response, error) {
 		}
 		s.reader = bufio.NewReader(s.conn)
 	}
+	if s.auth != nil {
+		if err := s.auth.Authorize(req); err != nil {
+			return nil, err
+		}
+	}
 	if err := req.WriteTo(s.conn); err != nil {
 		return nil, err
 	}
-	return ReadResponse(s.reader)
+	resp, err := ReadResponse(s.reader)
+	if err != nil {
+		return nil, err
+	}
+	if s.auth != nil {
+		if err := s.auth.Handle(resp); err != nil {
+			return nil, err
+		}
+	}
+	return resp, nil
 }
 
 func (s *Session) Describe(urlStr string) (*Response, error) {
