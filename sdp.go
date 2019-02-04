@@ -20,7 +20,7 @@ type SessionSection struct {
 	BandwidthInformation  string
 }
 
-func ParseSdp(r io.Reader) (SessionSection, error) {
+func ParseSDP(r io.Reader) (SessionSection, error) {
 	var packet SessionSection
 	s := bufio.NewScanner(r)
 	for s.Scan() {
