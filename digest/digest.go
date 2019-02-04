@@ -44,7 +44,7 @@ var (
 	ErrAlgNotImplemented = errors.New("Alg not implemented")
 )
 
-// Transport is an implementation of http.RoundTripper that takes care of http
+// Transport is an implementation of rtsp.RoundTripper that takes care of
 // digest authentication.
 type Transport struct {
 	Username  string
@@ -52,7 +52,7 @@ type Transport struct {
 	Transport rtsp.RoundTripper
 }
 
-// NewTransport creates a new digest transport using the http.DefaultTransport.
+// NewTransport creates a new digest transport using the rtsp.Transport.
 func NewTransport(username, password string) *Transport {
 	t := &Transport{
 		Username: username,
