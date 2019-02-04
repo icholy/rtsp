@@ -202,11 +202,10 @@ type Session struct {
 	Transport RoundTripper
 }
 
-func NewSession(trans RoundTripper) *Session {
-	if trans == nil {
-		trans = &Transport{}
+func NewSession() *Session {
+	return &Session{
+		Transport: &Transport{},
 	}
-	return &Session{Transport: trans}
 }
 
 func (s *Session) Close() error {
