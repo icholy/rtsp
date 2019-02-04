@@ -175,8 +175,8 @@ func (r Request) String() string {
 	return s.String()
 }
 
-func NewRequest(method, urlStr string, cSeq int, body io.ReadCloser) (*Request, error) {
-	u, err := url.Parse(urlStr)
+func NewRequest(method, rawurl string, cSeq int, body io.ReadCloser) (*Request, error) {
+	u, err := url.Parse(rawurl)
 	if err != nil {
 		return nil, err
 	}
@@ -217,8 +217,8 @@ func (s *Session) nextCSeq() int {
 	return s.cSeq
 }
 
-func (s *Session) Describe(urlStr string) (*Response, error) {
-	req, err := NewRequest(MethodDescribe, urlStr, s.nextCSeq(), nil)
+func (s *Session) Describe(rawurl string) (*Response, error) {
+	req, err := NewRequest(MethodDescribe, rawurl, s.nextCSeq(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -226,16 +226,16 @@ func (s *Session) Describe(urlStr string) (*Response, error) {
 	return s.Transport.RoundTrip(req)
 }
 
-func (s *Session) Options(urlStr string) (*Response, error) {
-	req, err := NewRequest(MethodOptions, urlStr, s.nextCSeq(), nil)
+func (s *Session) Options(rawurl string) (*Response, error) {
+	req, err := NewRequest(MethodOptions, rawurl, s.nextCSeq(), nil)
 	if err != nil {
 		return nil, err
 	}
 	return s.Transport.RoundTrip(req)
 }
 
-func (s *Session) Setup(urlStr, transport string) (*Response, error) {
-	req, err := NewRequest(MethodSetup, urlStr, s.nextCSeq(), nil)
+func (s *Session) Setup(rawurl, transport string) (*Response, error) {
+	req, err := NewRequest(MethodSetup, rawurl, s.nextCSeq(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -248,8 +248,8 @@ func (s *Session) Setup(urlStr, transport string) (*Response, error) {
 	return resp, nil
 }
 
-func (s *Session) Play(urlStr, sessionID string) (*Response, error) {
-	req, err := NewRequest(MethodPlay, urlStr, s.nextCSeq(), nil)
+func (s *Session) Play(rawurl, sessionID string) (*Response, error) {
+	req, err := NewRequest(MethodPlay, rawurl, s.nextCSeq(), nil)
 	if err != nil {
 		return nil, err
 	}
