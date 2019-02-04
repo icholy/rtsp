@@ -14,120 +14,120 @@ import (
 
 const (
 	// Client to server for presentation and stream objects; recommended
-	DESCRIBE = "DESCRIBE"
+	MethodDescribe = "DESCRIBE"
 	// Bidirectional for client and stream objects; optional
-	ANNOUNCE = "ANNOUNCE"
+	MethodAnnounce = "ANNOUNCE"
 	// Bidirectional for client and stream objects; optional
-	GET_PARAMETER = "GET_PARAMETER"
+	MethodGetParameter = "GET_PARAMETER"
 	// Bidirectional for client and stream objects; required for Client to server, optional for server to client
-	OPTIONS = "OPTIONS"
+	MethodOptions = "OPTIONS"
 	// Client to server for presentation and stream objects; recommended
-	PAUSE = "PAUSE"
+	MethodPause = "PAUSE"
 	// Client to server for presentation and stream objects; required
-	PLAY = "PLAY"
+	MethodPlay = "PLAY"
 	// Client to server for presentation and stream objects; optional
-	RECORD = "RECORD"
+	MethodRecord = "RECORD"
 	// Server to client for presentation and stream objects; optional
-	REDIRECT = "REDIRECT"
+	MethodRedirect = "REDIRECT"
 	// Client to server for stream objects; required
-	SETUP = "SETUP"
+	MethodSetup = "SETUP"
 	// Bidirectional for presentation and stream objects; optional
-	SET_PARAMETER = "SET_PARAMETER"
+	MethodSetParameter = "SET_PARAMETER"
 	// Client to server for presentation and stream objects; required
-	TEARDOWN = "TEARDOWN"
+	MethodTeardown = "TEARDOWN"
 )
 
 const (
 	// all requests
-	Continue = 100
+	StatusContinue = 100
 
 	// all requests
-	OK = 200
+	StatusOK = 200
 	// RECORD
-	Created = 201
+	StatusCreated = 201
 	// RECORD
-	LowOnStorageSpace = 250
+	StatusLowOnStorageSpace = 250
 
 	// all requests
-	MultipleChoices = 300
+	StatusMultipleChoices = 300
 	// all requests
-	MovedPermanently = 301
+	StatusMovedPermanently = 301
 	// all requests
-	MovedTemporarily = 302
+	StatusMovedTemporarily = 302
 	// all requests
-	SeeOther = 303
+	StatusSeeOther = 303
 	// all requests
-	UseProxy = 305
+	StatusUseProxy = 305
 
 	// all requests
-	BadRequest = 400
+	StatusBadRequest = 400
 	// all requests
-	Unauthorized = 401
+	StatusUnauthorized = 401
 	// all requests
-	PaymentRequired = 402
+	StatusPaymentRequired = 402
 	// all requests
-	Forbidden = 403
+	StatusForbidden = 403
 	// all requests
-	NotFound = 404
+	StatusNotFound = 404
 	// all requests
-	MethodNotAllowed = 405
+	StatusMethodNotAllowed = 405
 	// all requests
-	NotAcceptable = 406
+	StatusNotAcceptable = 406
 	// all requests
-	ProxyAuthenticationRequired = 407
+	StatusProxyAuthenticationRequired = 407
 	// all requests
-	RequestTimeout = 408
+	StatusRequestTimeout = 408
 	// all requests
-	Gone = 410
+	StatusGone = 410
 	// all requests
-	LengthRequired = 411
+	StatusLengthRequired = 411
 	// DESCRIBE, SETUP
-	PreconditionFailed = 412
+	StatusPreconditionFailed = 412
 	// all requests
-	RequestEntityTooLarge = 413
+	StatusRequestEntityTooLarge = 413
 	// all requests
-	RequestURITooLong = 414
+	StatusRequestURITooLong = 414
 	// all requests
-	UnsupportedMediaType = 415
+	StatusUnsupportedMediaType = 415
 	// SETUP
-	Invalidparameter = 451
+	StatusInvalidparameter = 451
 	// SETUP
-	IllegalConferenceIdentifier = 452
+	StatusIllegalConferenceIdentifier = 452
 	// SETUP
-	NotEnoughBandwidth = 453
+	StatusNotEnoughBandwidth = 453
 	// all requests
-	SessionNotFound = 454
+	StatusSessionNotFound = 454
 	// all requests
-	MethodNotValidInThisState = 455
+	StatusMethodNotValidInThisState = 455
 	// all requests
-	HeaderFieldNotValid = 456
+	StatusHeaderFieldNotValid = 456
 	// PLAY
-	InvalidRange = 457
+	StatusInvalidRange = 457
 	// SET_PARAMETER
-	ParameterIsReadOnly = 458
+	StatusParameterIsReadOnly = 458
 	// all requests
-	AggregateOperationNotAllowed = 459
+	StatusAggregateOperationNotAllowed = 459
 	// all requests
-	OnlyAggregateOperationAllowed = 460
+	StatusOnlyAggregateOperationAllowed = 460
 	// all requests
-	UnsupportedTransport = 461
+	StatusUnsupportedTransport = 461
 	// all requests
-	DestinationUnreachable = 462
+	StatusDestinationUnreachable = 462
 
 	// all requests
-	InternalServerError = 500
+	StatusInternalServerError = 500
 	// all requests
-	NotImplemented = 501
+	StatusNotImplemented = 501
 	// all requests
-	BadGateway = 502
+	StatusBadGateway = 502
 	// all requests
-	ServiceUnavailable = 503
+	StatusServiceUnavailable = 503
 	// all requests
-	GatewayTimeout = 504
+	StatusGatewayTimeout = 504
 	// all requests
-	RTSPVersionNotSupported = 505
+	StatusRTSPVersionNotSupported = 505
 	// all requests
-	OptionNotsupport = 551
+	StatusOptionNotsupport = 551
 )
 
 type ResponseWriter interface {
@@ -197,7 +197,7 @@ func (s *Session) nextCSeq() int {
 }
 
 func (s *Session) Describe(urlStr string) (*Response, error) {
-	req, err := NewRequest(DESCRIBE, urlStr, s.nextCSeq(), nil)
+	req, err := NewRequest(MethodDescribe, urlStr, s.nextCSeq(), nil)
 	if err != nil {
 		panic(err)
 	}
@@ -219,7 +219,7 @@ func (s *Session) Describe(urlStr string) (*Response, error) {
 }
 
 func (s *Session) Options(urlStr string) (*Response, error) {
-	req, err := NewRequest(OPTIONS, urlStr, s.nextCSeq(), nil)
+	req, err := NewRequest(MethodOptions, urlStr, s.nextCSeq(), nil)
 	if err != nil {
 		panic(err)
 	}
@@ -239,7 +239,7 @@ func (s *Session) Options(urlStr string) (*Response, error) {
 }
 
 func (s *Session) Setup(urlStr, transport string) (*Response, error) {
-	req, err := NewRequest(SETUP, urlStr, s.nextCSeq(), nil)
+	req, err := NewRequest(MethodSetup, urlStr, s.nextCSeq(), nil)
 	if err != nil {
 		panic(err)
 	}
@@ -263,7 +263,7 @@ func (s *Session) Setup(urlStr, transport string) (*Response, error) {
 }
 
 func (s *Session) Play(urlStr, sessionId string) (*Response, error) {
-	req, err := NewRequest(PLAY, urlStr, s.nextCSeq(), nil)
+	req, err := NewRequest(MethodPlay, urlStr, s.nextCSeq(), nil)
 	if err != nil {
 		panic(err)
 	}
