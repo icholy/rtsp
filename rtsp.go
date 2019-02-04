@@ -131,10 +131,6 @@ const (
 	StatusOptionNotsupport = 551
 )
 
-type ResponseWriter interface {
-	http.ResponseWriter
-}
-
 type Request struct {
 	Method        string
 	URL           *url.URL
