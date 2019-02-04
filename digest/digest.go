@@ -52,6 +52,10 @@ type Transport struct {
 	Transport rtsp.RoundTripper
 }
 
+func (t *Transport) Close() error {
+	return t.Transport.Close()
+}
+
 // NewTransport creates a new digest transport using the rtsp.Transport.
 func NewTransport(username, password string) *Transport {
 	t := &Transport{
