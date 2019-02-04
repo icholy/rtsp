@@ -339,14 +339,22 @@ type Response struct {
 	Body   io.ReadCloser
 }
 
-func (res Response) String() string {
-	s := fmt.Sprintf("%s/%d.%d %d %s\n", res.Proto, res.ProtoMajor, res.ProtoMinor, res.StatusCode, res.Status)
-	for k, v := range res.Header {
-		for _, v := range v {
-			s += fmt.Sprintf("%s: %s\n", k, v)
-		}
+func (res Response) WriteTo(w io.Writer) error {
+	if _, err := fmt.Fprintf(w,
+		"%s/%d.%d %d %s\n",
+		res.Proto, res.ProtoMajor, res.ProtoMinor, res.StatusCode, res.Status,
+	); err != nil {
+		return err
 	}
-	return s
+	return res.Header.Write(w)
+}
+
+func (res Response) String() string {
+	var s strings.Builder
+	if err := res.WriteTo(&s); err != nil {
+		return err.Error()
+	}
+	return s.String()
 }
 
 func ReadResponse(r *bufio.Reader) (res *Response, err error) {
