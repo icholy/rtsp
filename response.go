@@ -125,6 +125,9 @@ func (res Response) WriteTo(w io.Writer) error {
 	if err := res.Header.Write(w); err != nil {
 		return err
 	}
+	if _, err := io.WriteString(w, "\r\n"); err != nil {
+		return err
+	}
 	if _, err := w.Write(res.Body); err != nil {
 		return err
 	}
