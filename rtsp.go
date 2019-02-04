@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"net"
 	"net/http"
 	"net/textproto"
 	"net/url"
@@ -197,64 +196,26 @@ func NewRequest(method, urlStr string, cSeq int, body io.ReadCloser) (*Request, 
 	return req, nil
 }
 
-type Auth interface {
-	Authorize(*Request) error
-	Handle(*Response) error
-}
-
 type Session struct {
-	auth    Auth
-	cSeq    int
-	conn    net.Conn
-	reader  *bufio.Reader
-	session string
+	cSeq      int
+	session   string
+	Transport RoundTripper
 }
 
-func NewSession(auth Auth) *Session {
-	return &Session{}
+func NewSession(trans RoundTripper) *Session {
+	if trans == nil {
+		trans = &Transport{}
+	}
+	return &Session{Transport: trans}
 }
 
 func (s *Session) Close() error {
-	if s.conn == nil {
-		return nil
-	}
-	err := s.conn.Close()
-	s.conn = nil
-	return err
+	return s.Transport.Close()
 }
 
 func (s *Session) nextCSeq() int {
 	s.cSeq++
 	return s.cSeq
-}
-
-func (s *Session) Do(req *Request) (*Response, error) {
-	if s.conn == nil {
-		var err error
-		s.conn, err = net.Dial("tcp", req.URL.Host)
-		if err != nil {
-			return nil, err
-		}
-		s.reader = bufio.NewReader(s.conn)
-	}
-	if s.auth != nil {
-		if err := s.auth.Authorize(req); err != nil {
-			return nil, err
-		}
-	}
-	if err := req.WriteTo(s.conn); err != nil {
-		return nil, err
-	}
-	resp, err := ReadResponse(s.reader)
-	if err != nil {
-		return nil, err
-	}
-	if s.auth != nil {
-		if err := s.auth.Handle(resp); err != nil {
-			return nil, err
-		}
-	}
-	return resp, nil
 }
 
 func (s *Session) Describe(urlStr string) (*Response, error) {
@@ -263,7 +224,7 @@ func (s *Session) Describe(urlStr string) (*Response, error) {
 		return nil, err
 	}
 	req.Header.Add("Accept", "application/sdp")
-	return s.Do(req)
+	return s.Transport.RoundTrip(req)
 }
 
 func (s *Session) Options(urlStr string) (*Response, error) {
@@ -271,7 +232,7 @@ func (s *Session) Options(urlStr string) (*Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	return s.Do(req)
+	return s.Transport.RoundTrip(req)
 }
 
 func (s *Session) Setup(urlStr, transport string) (*Response, error) {
@@ -280,7 +241,7 @@ func (s *Session) Setup(urlStr, transport string) (*Response, error) {
 		return nil, err
 	}
 	req.Header.Add("Transport", transport)
-	resp, err := s.Do(req)
+	resp, err := s.Transport.RoundTrip(req)
 	if err != nil {
 		return nil, err
 	}
@@ -294,7 +255,7 @@ func (s *Session) Play(urlStr, sessionID string) (*Response, error) {
 		return nil, err
 	}
 	req.Header.Add("Session", sessionID)
-	return s.Do(req)
+	return s.Transport.RoundTrip(req)
 }
 
 func ParseRTSPVersion(s string) (proto string, major int, minor int, err error) {
