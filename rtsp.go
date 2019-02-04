@@ -209,92 +209,58 @@ func (s *Session) nextCSeq() int {
 	return s.cSeq
 }
 
-func (s *Session) Describe(urlStr string) (*Response, error) {
-	req, err := NewRequest(MethodDescribe, urlStr, s.nextCSeq(), nil)
-	if err != nil {
-		panic(err)
-	}
-
-	req.Header.Add("Accept", "application/sdp")
-
+func (s *Session) Do(req *Request) (*Response, error) {
 	if s.conn == nil {
+		var err error
 		s.conn, err = net.Dial("tcp", req.URL.Host)
 		if err != nil {
 			return nil, err
 		}
 	}
-
-	_, err = io.WriteString(s.conn, req.String())
-	if err != nil {
+	if err := req.WriteTo(s.conn); err != nil {
 		return nil, err
 	}
 	return ReadResponse(s.conn)
+}
+
+func (s *Session) Describe(urlStr string) (*Response, error) {
+	req, err := NewRequest(MethodDescribe, urlStr, s.nextCSeq(), nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Accept", "application/sdp")
+	return s.Do(req)
 }
 
 func (s *Session) Options(urlStr string) (*Response, error) {
 	req, err := NewRequest(MethodOptions, urlStr, s.nextCSeq(), nil)
 	if err != nil {
-		panic(err)
-	}
-
-	if s.conn == nil {
-		s.conn, err = net.Dial("tcp", req.URL.Host)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	_, err = io.WriteString(s.conn, req.String())
-	if err != nil {
 		return nil, err
 	}
-	return ReadResponse(s.conn)
+	return s.Do(req)
 }
 
 func (s *Session) Setup(urlStr, transport string) (*Response, error) {
 	req, err := NewRequest(MethodSetup, urlStr, s.nextCSeq(), nil)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-
 	req.Header.Add("Transport", transport)
-
-	if s.conn == nil {
-		s.conn, err = net.Dial("tcp", req.URL.Host)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	_, err = io.WriteString(s.conn, req.String())
+	resp, err := s.Do(req)
 	if err != nil {
 		return nil, err
 	}
-	resp, err := ReadResponse(s.conn)
 	s.session = resp.Header.Get("Session")
-	return resp, err
+	return resp, nil
 }
 
-func (s *Session) Play(urlStr, sessionId string) (*Response, error) {
+func (s *Session) Play(urlStr, sessionID string) (*Response, error) {
 	req, err := NewRequest(MethodPlay, urlStr, s.nextCSeq(), nil)
-	if err != nil {
-		panic(err)
-	}
-
-	req.Header.Add("Session", sessionId)
-
-	if s.conn == nil {
-		s.conn, err = net.Dial("tcp", req.URL.Host)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	_, err = io.WriteString(s.conn, req.String())
 	if err != nil {
 		return nil, err
 	}
-	return ReadResponse(s.conn)
+	req.Header.Add("Session", sessionID)
+	return s.Do(req)
 }
 
 type closer struct {
