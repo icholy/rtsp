@@ -144,13 +144,31 @@ type Request struct {
 	Body          io.ReadCloser
 }
 
+func (r Request) WriteTo(w io.Writer) error {
+	if _, err := fmt.Fprintf(w,
+		"%s %s %s/%d.%d\r\n",
+		r.Method, r.URL, r.Proto, r.ProtoMajor, r.ProtoMinor,
+	); err != nil {
+		return err
+	}
+	if err := r.Header.Write(w); err != nil {
+		return err
+	}
+	if _, err := io.WriteString(w, "\r\n"); err != nil {
+		return err
+	}
+	if r.Body != nil {
+		if _, err := io.Copy(w, r.Body); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (r Request) String() string {
 	var s strings.Builder
-	fmt.Fprintf(&s, "%s %s %s/%d.%d\r\n", r.Method, r.URL, r.Proto, r.ProtoMajor, r.ProtoMinor)
-	r.Header.Write(&s)
-	s.WriteString("\r\n")
-	if r.Body != nil {
-		io.Copy(&s, r.Body)
+	if err := r.WriteTo(&s); err != nil {
+		return err.Error()
 	}
 	return s.String()
 }
