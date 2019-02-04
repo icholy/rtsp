@@ -6,6 +6,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"net/textproto"
 	"net/url"
 	"strconv"
 	"strings"
@@ -301,10 +302,10 @@ func ReadRequest(r io.Reader) (req *Request, err error) {
 	req.Header = make(http.Header)
 
 	b := bufio.NewReader(r)
-	var s string
+	tp := textproto.NewReader(b)
 
-	// TODO: allow CR, LF, or CRLF
-	if s, err = b.ReadString('\n'); err != nil {
+	var s string
+	if s, err = tp.ReadLine(); err != nil {
 		return nil, err
 	}
 
@@ -320,17 +321,11 @@ func ReadRequest(r io.Reader) (req *Request, err error) {
 	}
 
 	// read headers
-	for {
-		if s, err = b.ReadString('\n'); err != nil {
-			return nil, err
-		}
-		if s = strings.TrimRight(s, "\r\n"); s == "" {
-			break
-		}
-
-		parts := strings.SplitN(s, ":", 2)
-		req.Header.Add(strings.TrimSpace(parts[0]), strings.TrimSpace(parts[1]))
+	header, err := tp.ReadMIMEHeader()
+	if err != nil {
+		return nil, err
 	}
+	req.Header = http.Header(header)
 
 	req.ContentLength, _ = strconv.Atoi(req.Header.Get("Content-Length"))
 	fmt.Println("Content Length:", req.ContentLength)
@@ -367,10 +362,10 @@ func ReadResponse(r io.Reader) (res *Response, err error) {
 	res.Header = make(map[string][]string)
 
 	b := bufio.NewReader(r)
-	var s string
+	tp := textproto.NewReader(b)
 
-	// TODO: allow CR, LF, or CRLF
-	if s, err = b.ReadString('\n'); err != nil {
+	var s string
+	if s, err = tp.ReadLine(); err != nil {
 		return
 	}
 
@@ -387,16 +382,11 @@ func ReadResponse(r io.Reader) (res *Response, err error) {
 	res.Status = strings.TrimSpace(parts[2])
 
 	// read headers
-	for {
-		if s, err = b.ReadString('\n'); err != nil {
-			return
-		} else if s = strings.TrimRight(s, "\r\n"); s == "" {
-			break
-		}
-
-		parts := strings.SplitN(s, ":", 2)
-		res.Header.Add(strings.TrimSpace(parts[0]), strings.TrimSpace(parts[1]))
+	header, err := tp.ReadMIMEHeader()
+	if err != nil {
+		return nil, err
 	}
+	res.Header = http.Header(header)
 
 	res.ContentLength, _ = strconv.ParseInt(res.Header.Get("Content-Length"), 10, 64)
 
