@@ -298,32 +298,33 @@ func ParseRTSPVersion(s string) (proto string, major int, minor int, err error) 
 // super simple RTSP parser; would be nice if net/http would allow more general parsing
 func ReadRequest(r io.Reader) (req *Request, err error) {
 	req = new(Request)
-	req.Header = make(map[string][]string)
+	req.Header = make(http.Header)
 
 	b := bufio.NewReader(r)
 	var s string
 
 	// TODO: allow CR, LF, or CRLF
 	if s, err = b.ReadString('\n'); err != nil {
-		return
+		return nil, err
 	}
 
 	parts := strings.SplitN(s, " ", 3)
 	req.Method = parts[0]
 	if req.URL, err = url.Parse(parts[1]); err != nil {
-		return
+		return nil, err
 	}
 
 	req.Proto, req.ProtoMajor, req.ProtoMinor, err = ParseRTSPVersion(parts[2])
 	if err != nil {
-		return
+		return nil, err
 	}
 
 	// read headers
 	for {
 		if s, err = b.ReadString('\n'); err != nil {
-			return
-		} else if s = strings.TrimRight(s, "\r\n"); s == "" {
+			return nil, err
+		}
+		if s = strings.TrimRight(s, "\r\n"); s == "" {
 			break
 		}
 
@@ -334,7 +335,7 @@ func ReadRequest(r io.Reader) (req *Request, err error) {
 	req.ContentLength, _ = strconv.Atoi(req.Header.Get("Content-Length"))
 	fmt.Println("Content Length:", req.ContentLength)
 	req.Body = closer{b, r}
-	return
+	return req, nil
 }
 
 type Response struct {
