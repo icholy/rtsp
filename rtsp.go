@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
@@ -146,18 +145,14 @@ type Request struct {
 }
 
 func (r Request) String() string {
-	s := fmt.Sprintf("%s %s %s/%d.%d\r\n", r.Method, r.URL, r.Proto, r.ProtoMajor, r.ProtoMinor)
-	for k, v := range r.Header {
-		for _, v := range v {
-			s += fmt.Sprintf("%s: %s\r\n", k, v)
-		}
-	}
-	s += "\r\n"
+	var s strings.Builder
+	fmt.Fprintf(&s, "%s %s %s/%d.%d\r\n", r.Method, r.URL, r.Proto, r.ProtoMajor, r.ProtoMinor)
+	r.Header.Write(&s)
+	s.WriteString("\r\n")
 	if r.Body != nil {
-		str, _ := ioutil.ReadAll(r.Body)
-		s += string(str)
+		io.Copy(&s, r.Body)
 	}
-	return s
+	return s.String()
 }
 
 func NewRequest(method, urlStr string, cSeq int, body io.ReadCloser) (*Request, error) {
