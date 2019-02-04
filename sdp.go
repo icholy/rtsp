@@ -69,5 +69,5 @@ func ParseSDP(r io.Reader) (SessionSection, error) {
 			}
 		}
 	}
-	return packet, nil
+	return packet, s.Err()
 }
