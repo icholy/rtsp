@@ -402,6 +402,5 @@ func readBody(h http.Header, r *bufio.Reader) (int64, io.ReadCloser, error) {
 		}
 		return length, ioutil.NopCloser(bytes.NewReader(body)), nil
 	}
-
 	return -1, http.NoBody, nil
 }
