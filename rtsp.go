@@ -160,7 +160,7 @@ func (r Request) String() string {
 	return s
 }
 
-func NewRequest(method, urlStr, cSeq string, body io.ReadCloser) (*Request, error) {
+func NewRequest(method, urlStr string, cSeq int, body io.ReadCloser) (*Request, error) {
 	u, err := url.Parse(urlStr)
 	if err != nil {
 		return nil, err
@@ -174,9 +174,10 @@ func NewRequest(method, urlStr, cSeq string, body io.ReadCloser) (*Request, erro
 		Proto:      "RTSP",
 		ProtoMajor: 1,
 		ProtoMinor: 0,
-		Header:     map[string][]string{"CSeq": []string{cSeq}},
+		Header:     http.Header{},
 		Body:       body,
 	}
+	req.Header.Set("CSeq", strconv.Itoa(cSeq))
 	return req, nil
 }
 
@@ -190,9 +191,9 @@ func NewSession() *Session {
 	return &Session{}
 }
 
-func (s *Session) nextCSeq() string {
+func (s *Session) nextCSeq() int {
 	s.cSeq++
-	return strconv.Itoa(s.cSeq)
+	return s.cSeq
 }
 
 func (s *Session) Describe(urlStr string) (*Response, error) {
