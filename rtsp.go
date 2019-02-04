@@ -200,6 +200,7 @@ func NewRequest(method, urlStr string, cSeq int, body io.ReadCloser) (*Request, 
 type Session struct {
 	cSeq    int
 	conn    net.Conn
+	reader  *bufio.Reader
 	session string
 }
 
@@ -228,11 +229,12 @@ func (s *Session) Do(req *Request) (*Response, error) {
 		if err != nil {
 			return nil, err
 		}
+		s.reader = bufio.NewReader(s.conn)
 	}
 	if err := req.WriteTo(s.conn); err != nil {
 		return nil, err
 	}
-	return ReadResponse(s.conn)
+	return ReadResponse(s.reader)
 }
 
 func (s *Session) Describe(urlStr string) (*Response, error) {
@@ -289,12 +291,11 @@ func ParseRTSPVersion(s string) (proto string, major int, minor int, err error) 
 }
 
 // super simple RTSP parser; would be nice if net/http would allow more general parsing
-func ReadRequest(r io.Reader) (req *Request, err error) {
+func ReadRequest(r *bufio.Reader) (req *Request, err error) {
 	req = new(Request)
 	req.Header = make(http.Header)
 
-	b := bufio.NewReader(r)
-	tp := textproto.NewReader(b)
+	tp := textproto.NewReader(r)
 
 	var s string
 	if s, err = tp.ReadLine(); err != nil {
@@ -319,7 +320,7 @@ func ReadRequest(r io.Reader) (req *Request, err error) {
 	}
 	req.Header = http.Header(header)
 
-	req.ContentLength, req.Body, err = readBody(req.Header, b)
+	req.ContentLength, req.Body, err = readBody(req.Header, r)
 	if err != nil {
 		return nil, err
 	}
@@ -350,11 +351,10 @@ func (res Response) String() string {
 	return s
 }
 
-func ReadResponse(r io.Reader) (res *Response, err error) {
+func ReadResponse(r *bufio.Reader) (res *Response, err error) {
 	res = new(Response)
 
-	b := bufio.NewReader(r)
-	tp := textproto.NewReader(b)
+	tp := textproto.NewReader(r)
 
 	var s string
 	if s, err = tp.ReadLine(); err != nil {
@@ -381,7 +381,7 @@ func ReadResponse(r io.Reader) (res *Response, err error) {
 	res.Header = http.Header(header)
 
 	// read the body
-	res.ContentLength, res.Body, err = readBody(res.Header, b)
+	res.ContentLength, res.Body, err = readBody(res.Header, r)
 	if err != nil {
 		return nil, err
 	}
