@@ -122,7 +122,13 @@ func (res Response) WriteTo(w io.Writer) error {
 	); err != nil {
 		return err
 	}
-	return res.Header.Write(w)
+	if err := res.Header.Write(w); err != nil {
+		return err
+	}
+	if _, err := w.Write(res.Body); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (res Response) String() string {
