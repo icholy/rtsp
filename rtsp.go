@@ -292,22 +292,19 @@ func ParseRTSPVersion(s string) (proto string, major int, minor int, err error) 
 
 // super simple RTSP parser; would be nice if net/http would allow more general parsing
 func ReadRequest(r *bufio.Reader) (req *Request, err error) {
-	req = new(Request)
-	req.Header = make(http.Header)
-
 	tp := textproto.NewReader(r)
+	req = new(Request)
 
+	// read request line
 	var s string
 	if s, err = tp.ReadLine(); err != nil {
 		return nil, err
 	}
-
 	parts := strings.SplitN(s, " ", 3)
 	req.Method = parts[0]
 	if req.URL, err = url.Parse(parts[1]); err != nil {
 		return nil, err
 	}
-
 	req.Proto, req.ProtoMajor, req.ProtoMinor, err = ParseRTSPVersion(parts[2])
 	if err != nil {
 		return nil, err
@@ -320,6 +317,7 @@ func ReadRequest(r *bufio.Reader) (req *Request, err error) {
 	}
 	req.Header = http.Header(header)
 
+	// read body
 	req.ContentLength, req.Body, err = readBody(req.Header, r)
 	if err != nil {
 		return nil, err
@@ -352,25 +350,22 @@ func (res Response) String() string {
 }
 
 func ReadResponse(r *bufio.Reader) (res *Response, err error) {
+	tp := textproto.NewReader(r)
 	res = new(Response)
 
-	tp := textproto.NewReader(r)
-
+	// read response line
 	var s string
 	if s, err = tp.ReadLine(); err != nil {
 		return
 	}
-
 	parts := strings.SplitN(s, " ", 3)
 	res.Proto, res.ProtoMajor, res.ProtoMinor, err = ParseRTSPVersion(parts[0])
 	if err != nil {
 		return
 	}
-
 	if res.StatusCode, err = strconv.Atoi(parts[1]); err != nil {
 		return
 	}
-
 	res.Status = strings.TrimSpace(parts[2])
 
 	// read headers
@@ -380,7 +375,7 @@ func ReadResponse(r *bufio.Reader) (res *Response, err error) {
 	}
 	res.Header = http.Header(header)
 
-	// read the body
+	// read body
 	res.ContentLength, res.Body, err = readBody(res.Header, r)
 	if err != nil {
 		return nil, err
