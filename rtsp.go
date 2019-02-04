@@ -352,7 +352,6 @@ func (res Response) String() string {
 
 func ReadResponse(r io.Reader) (res *Response, err error) {
 	res = new(Response)
-	res.Header = make(map[string][]string)
 
 	b := bufio.NewReader(r)
 	tp := textproto.NewReader(b)
