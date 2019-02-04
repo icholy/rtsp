@@ -2,10 +2,8 @@ package rtsp
 
 import (
 	"bufio"
-	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/textproto"
 	"net/url"
@@ -132,14 +130,13 @@ const (
 )
 
 type Request struct {
-	Method        string
-	URL           *url.URL
-	Proto         string
-	ProtoMajor    int
-	ProtoMinor    int
-	Header        http.Header
-	ContentLength int64
-	Body          io.ReadCloser
+	Method     string
+	URL        *url.URL
+	Proto      string
+	ProtoMajor int
+	ProtoMinor int
+	Header     http.Header
+	Body       []byte
 }
 
 func (r Request) WriteTo(w io.Writer) error {
@@ -155,10 +152,8 @@ func (r Request) WriteTo(w io.Writer) error {
 	if _, err := io.WriteString(w, "\r\n"); err != nil {
 		return err
 	}
-	if r.Body != nil {
-		if _, err := io.Copy(w, r.Body); err != nil {
-			return err
-		}
+	if _, err := w.Write(r.Body); err != nil {
+		return err
 	}
 	return nil
 }
@@ -171,7 +166,7 @@ func (r Request) String() string {
 	return s.String()
 }
 
-func NewRequest(method, rawurl string, cSeq int, body io.ReadCloser) (*Request, error) {
+func NewRequest(method, rawurl string, cSeq int, body []byte) (*Request, error) {
 	u, err := url.Parse(rawurl)
 	if err != nil {
 		return nil, err
@@ -302,7 +297,7 @@ func ReadRequest(r *bufio.Reader) (req *Request, err error) {
 	req.Header = http.Header(header)
 
 	// read body
-	req.ContentLength, req.Body, err = readBody(req.Header, r)
+	req.Body, err = readBody(req.Header, r)
 	if err != nil {
 		return nil, err
 	}
@@ -317,10 +312,8 @@ type Response struct {
 	StatusCode int
 	Status     string
 
-	ContentLength int64
-
 	Header http.Header
-	Body   io.ReadCloser
+	Body   []byte
 }
 
 func (res Response) WriteTo(w io.Writer) error {
@@ -368,7 +361,7 @@ func ReadResponse(r *bufio.Reader) (res *Response, err error) {
 	res.Header = http.Header(header)
 
 	// read body
-	res.ContentLength, res.Body, err = readBody(res.Header, r)
+	res.Body, err = readBody(res.Header, r)
 	if err != nil {
 		return nil, err
 	}
@@ -376,17 +369,17 @@ func ReadResponse(r *bufio.Reader) (res *Response, err error) {
 	return
 }
 
-func readBody(h http.Header, r *bufio.Reader) (int64, io.ReadCloser, error) {
+func readBody(h http.Header, r *bufio.Reader) ([]byte, error) {
 	if cl := h.Get("Content-Length"); cl != "" {
 		length, err := strconv.ParseInt(cl, 10, 64)
 		if err != nil {
-			return 0, nil, fmt.Errorf("invalid Content-Length: %v", err)
+			return nil, fmt.Errorf("invalid Content-Length: %v", err)
 		}
 		body := make([]byte, length)
 		if _, err := r.Read(body); err != nil {
-			return 0, nil, err
+			return nil, err
 		}
-		return length, ioutil.NopCloser(bytes.NewReader(body)), nil
+		return body, nil
 	}
-	return -1, http.NoBody, nil
+	return nil, nil
 }
