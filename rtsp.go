@@ -279,8 +279,16 @@ func (s *Session) Play(urlStr, sessionID string) (*Response, error) {
 
 func ParseRTSPVersion(s string) (proto string, major int, minor int, err error) {
 	parts := strings.SplitN(s, "/", 2)
+	if len(parts) != 2 {
+		err = fmt.Errorf("invalid proto: %s", s)
+		return
+	}
 	proto = parts[0]
 	parts = strings.SplitN(parts[1], ".", 2)
+	if len(parts) != 2 {
+		err = fmt.Errorf("invalid proto: %s", s)
+		return
+	}
 	if major, err = strconv.Atoi(parts[0]); err != nil {
 		return
 	}
