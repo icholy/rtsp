@@ -187,65 +187,42 @@ func NewRequest(method, rawurl string, cSeq int, body []byte) (*Request, error) 
 	return req, nil
 }
 
-type Session struct {
+type Client struct {
 	cSeq      int
 	session   string
 	Transport RoundTripper
 }
 
-func NewSession() *Session {
-	return &Session{
+func NewClient() *Client {
+	return &Client{
 		Transport: &Transport{},
 	}
 }
 
-func (s *Session) Close() error {
-	return s.Transport.Close()
+func (c *Client) Close() error {
+	return c.Transport.Close()
 }
 
-func (s *Session) nextCSeq() int {
-	s.cSeq++
-	return s.cSeq
+func (c *Client) nextCSeq() int {
+	c.cSeq++
+	return c.cSeq
 }
 
-func (s *Session) Describe(rawurl string) (*Response, error) {
-	req, err := NewRequest(MethodDescribe, rawurl, s.nextCSeq(), nil)
+func (c *Client) Describe(rawurl string) (*Response, error) {
+	req, err := NewRequest(MethodDescribe, rawurl, c.nextCSeq(), nil)
 	if err != nil {
 		return nil, err
 	}
 	req.Header.Add("Accept", "application/sdp")
-	return s.Transport.RoundTrip(req)
+	return c.Transport.RoundTrip(req)
 }
 
-func (s *Session) Options(rawurl string) (*Response, error) {
-	req, err := NewRequest(MethodOptions, rawurl, s.nextCSeq(), nil)
+func (c *Client) Options(rawurl string) (*Response, error) {
+	req, err := NewRequest(MethodOptions, rawurl, c.nextCSeq(), nil)
 	if err != nil {
 		return nil, err
 	}
-	return s.Transport.RoundTrip(req)
-}
-
-func (s *Session) Setup(rawurl, transport string) (*Response, error) {
-	req, err := NewRequest(MethodSetup, rawurl, s.nextCSeq(), nil)
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Add("Transport", transport)
-	resp, err := s.Transport.RoundTrip(req)
-	if err != nil {
-		return nil, err
-	}
-	s.session = resp.Header.Get("Session")
-	return resp, nil
-}
-
-func (s *Session) Play(rawurl, sessionID string) (*Response, error) {
-	req, err := NewRequest(MethodPlay, rawurl, s.nextCSeq(), nil)
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Add("Session", sessionID)
-	return s.Transport.RoundTrip(req)
+	return c.Transport.RoundTrip(req)
 }
 
 func ParseRTSPVersion(s string) (proto string, major int, minor int, err error) {
