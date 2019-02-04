@@ -275,25 +275,6 @@ func (s *Session) Play(urlStr, sessionID string) (*Response, error) {
 	return s.Do(req)
 }
 
-type closer struct {
-	*bufio.Reader
-	r io.Reader
-}
-
-func (c closer) Close() error {
-	if c.Reader == nil {
-		return nil
-	}
-	defer func() {
-		c.Reader = nil
-		c.r = nil
-	}()
-	if r, ok := c.r.(io.ReadCloser); ok {
-		return r.Close()
-	}
-	return nil
-}
-
 func ParseRTSPVersion(s string) (proto string, major int, minor int, err error) {
 	parts := strings.SplitN(s, "/", 2)
 	proto = parts[0]
