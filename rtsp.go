@@ -165,7 +165,9 @@ func NewRequest(method, urlStr, cSeq string, body io.ReadCloser) (*Request, erro
 	if err != nil {
 		return nil, err
 	}
-
+	if u.Port() == "" && u.Scheme == "rtsp" {
+		u.Host += ":554"
+	}
 	req := &Request{
 		Method:     method,
 		URL:        u,
