@@ -2,8 +2,8 @@ package rtsp
 
 import (
 	"bufio"
+	"bytes"
 	"errors"
-	"io"
 	"strconv"
 	"strings"
 )
@@ -20,9 +20,9 @@ type SessionSection struct {
 	BandwidthInformation  string
 }
 
-func ParseSDP(r io.Reader) (SessionSection, error) {
+func ParseSDP(data []byte) (SessionSection, error) {
 	var packet SessionSection
-	s := bufio.NewScanner(r)
+	s := bufio.NewScanner(bytes.NewReader(data))
 	for s.Scan() {
 		parts := strings.SplitN(s.Text(), "=", 2)
 		if len(parts) != 2 {

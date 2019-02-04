@@ -247,9 +247,6 @@ func (t *Transport) RoundTrip(req *rtsp.Request) (*rtsp.Response, error) {
 		return resp, err
 	}
 
-	// We'll no longer use the initial response, so close it
-	resp.Body.Close()
-
 	// Make authenticated request.
 	req2.Header.Set("Authorization", auth)
 	return t.Transport.RoundTrip(req2)
