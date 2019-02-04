@@ -207,6 +207,15 @@ func NewSession() *Session {
 	return &Session{}
 }
 
+func (s *Session) Close() error {
+	if s.conn == nil {
+		return nil
+	}
+	err := s.conn.Close()
+	s.conn = nil
+	return err
+}
+
 func (s *Session) nextCSeq() int {
 	s.cSeq++
 	return s.cSeq
