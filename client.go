@@ -9,11 +9,13 @@ import (
 
 type Client struct {
 	cseq      int
+	UserAgent string
 	Transport RoundTripper
 }
 
 func NewClient() *Client {
 	return &Client{
+		UserAgent: "Golang-RTSP",
 		Transport: &Transport{},
 	}
 }
@@ -29,6 +31,10 @@ func (c *Client) Do(req *Request) (*Response, error) {
 	// add the sequence number
 	c.cseq++
 	clone.Header.Set("CSeq", strconv.Itoa(c.cseq))
+	// add the user-agent
+	if c.UserAgent != "" {
+		clone.Header.Set("User-Agent", c.UserAgent)
+	}
 	// make the request
 	return c.Transport.RoundTrip(req)
 }
