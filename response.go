@@ -10,18 +10,6 @@ import (
 	"strings"
 )
 
-type Response struct {
-	Proto      string
-	ProtoMajor int
-	ProtoMinor int
-
-	StatusCode int
-	Status     string
-
-	Header http.Header
-	Body   []byte
-}
-
 const (
 	// all requests
 	StatusContinue = 100
@@ -114,6 +102,18 @@ const (
 	// all requests
 	StatusOptionNotsupport = 551
 )
+
+type Response struct {
+	Proto      string
+	ProtoMajor int
+	ProtoMinor int
+
+	StatusCode int
+	Status     string
+
+	Header http.Header
+	Body   []byte
+}
 
 func (res Response) WriteTo(w io.Writer) error {
 	if _, err := fmt.Fprintf(w,
