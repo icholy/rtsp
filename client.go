@@ -76,6 +76,7 @@ func (c *Client) Play(endpoint, session string) (*Response, error) {
 		return nil, err
 	}
 	req.Header.Set("Session", session)
+	req.Header.Set("Range", "npt=0.000-")
 	return c.Do(req)
 }
 
