@@ -5,7 +5,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
 )
 
@@ -71,7 +70,7 @@ func (r Request) String() string {
 	return s.String()
 }
 
-func NewRequest(method, endpoint string, cSeq int, body []byte) (*Request, error) {
+func NewRequest(method, endpoint string, body []byte) (*Request, error) {
 	u, err := url.Parse(endpoint)
 	if err != nil {
 		return nil, err
@@ -88,6 +87,5 @@ func NewRequest(method, endpoint string, cSeq int, body []byte) (*Request, error
 		Header:     http.Header{},
 		Body:       body,
 	}
-	req.Header.Set("CSeq", strconv.Itoa(cSeq))
 	return req, nil
 }
