@@ -7,7 +7,6 @@ import (
 
 type Client struct {
 	cseq      int
-	session   string
 	Transport RoundTripper
 }
 
