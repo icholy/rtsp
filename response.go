@@ -151,15 +151,16 @@ func ReadResponse(r *bufio.Reader) (res *Response, err error) {
 	if s, err = tp.ReadLine(); err != nil {
 		return
 	}
-	parts := strings.SplitN(s, " ", 3)
-	res.Proto, res.ProtoMajor, res.ProtoMinor, err = ParseRTSPVersion(parts[0])
+	proto, code, status, ok := parseResponseLine(s)
+	if !ok {
+		return nil, fmt.Errorf("invalid response: %s", s)
+	}
+	res.Proto, res.ProtoMajor, res.ProtoMinor, err = parseResponseVersion(proto)
 	if err != nil {
 		return
 	}
-	if res.StatusCode, err = strconv.Atoi(parts[1]); err != nil {
-		return
-	}
-	res.Status = strings.TrimSpace(parts[2])
+	res.StatusCode = code
+	res.Status = status
 
 	// read headers
 	header, err := tp.ReadMIMEHeader()
@@ -183,7 +184,7 @@ func ReadResponse(r *bufio.Reader) (res *Response, err error) {
 	return
 }
 
-func ParseRTSPVersion(s string) (proto string, major int, minor int, err error) {
+func parseResponseVersion(s string) (proto string, major int, minor int, err error) {
 	parts := strings.SplitN(s, "/", 2)
 	if len(parts) != 2 {
 		err = fmt.Errorf("invalid proto: %s", s)
@@ -202,4 +203,17 @@ func ParseRTSPVersion(s string) (proto string, major int, minor int, err error) 
 		return
 	}
 	return
+}
+
+func parseResponseLine(line string) (proto string, code int, status string, ok bool) {
+	parts := strings.SplitN(line, " ", 3)
+	if len(parts) != 3 {
+		return
+	}
+	code, err := strconv.Atoi(parts[1])
+	if err != nil {
+		return
+	}
+	status = strings.TrimSpace(parts[2])
+	return parts[0], code, status, true
 }
