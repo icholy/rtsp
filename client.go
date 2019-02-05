@@ -36,7 +36,7 @@ func (c *Client) Do(req *Request) (*Response, error) {
 		clone.Header.Set("User-Agent", c.UserAgent)
 	}
 	// make the request
-	return c.Transport.RoundTrip(req)
+	return c.Transport.RoundTrip(&clone)
 }
 
 func (c *Client) Describe(endpoint string) (*Response, error) {
