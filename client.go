@@ -1,8 +1,10 @@
 package rtsp
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 type Client struct {
@@ -55,6 +57,17 @@ func (c *Client) Setup(endpoint, transport string) (*Response, error) {
 	}
 	req.Header.Set("Transport", transport)
 	return c.Do(req)
+}
+
+func Session(resp *Response) (string, error) {
+	if resp.StatusCode != StatusOK {
+		return "", errors.New(resp.Status)
+	}
+	fields := strings.Split(resp.Header.Get("Session"), ";")
+	if len(fields) == 0 {
+		return "", errors.New("missing Sessions header")
+	}
+	return strings.TrimSpace(fields[0]), nil
 }
 
 func (c *Client) Play(endpoint, session string) (*Response, error) {
