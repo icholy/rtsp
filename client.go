@@ -48,6 +48,33 @@ func (c *Client) Options(endpoint string) (*Response, error) {
 	return c.Do(req)
 }
 
+func (c *Client) Setup(endpoint, transport string) (*Response, error) {
+	req, err := NewRequest(MethodSetup, endpoint, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Transport", transport)
+	return c.Do(req)
+}
+
+func (c *Client) Play(endpoint, session string) (*Response, error) {
+	req, err := NewRequest(MethodPlay, endpoint, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Session", session)
+	return c.Do(req)
+}
+
+func (c *Client) Teardown(endpoint, session string) (*Response, error) {
+	req, err := NewRequest(MethodTeardown, endpoint, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Session", session)
+	return c.Do(req)
+}
+
 func cloneHeader(h http.Header) http.Header {
 	h2 := make(http.Header, len(h))
 	for k, vv := range h {
