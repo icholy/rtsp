@@ -21,8 +21,8 @@ func (c *Client) nextCSeq() int {
 	return c.cSeq
 }
 
-func (c *Client) Describe(rawurl string) (*Response, error) {
-	req, err := NewRequest(MethodDescribe, rawurl, c.nextCSeq(), nil)
+func (c *Client) Describe(endpoint string) (*Response, error) {
+	req, err := NewRequest(MethodDescribe, endpoint, c.nextCSeq(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -30,8 +30,8 @@ func (c *Client) Describe(rawurl string) (*Response, error) {
 	return c.Transport.RoundTrip(req)
 }
 
-func (c *Client) Options(rawurl string) (*Response, error) {
-	req, err := NewRequest(MethodOptions, rawurl, c.nextCSeq(), nil)
+func (c *Client) Options(endpoint string) (*Response, error) {
+	req, err := NewRequest(MethodOptions, endpoint, c.nextCSeq(), nil)
 	if err != nil {
 		return nil, err
 	}

@@ -71,8 +71,8 @@ func (r Request) String() string {
 	return s.String()
 }
 
-func NewRequest(method, rawurl string, cSeq int, body []byte) (*Request, error) {
-	u, err := url.Parse(rawurl)
+func NewRequest(method, endpoint string, cSeq int, body []byte) (*Request, error) {
+	u, err := url.Parse(endpoint)
 	if err != nil {
 		return nil, err
 	}
