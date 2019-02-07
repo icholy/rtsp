@@ -12,9 +12,9 @@ import (
 )
 
 type Client struct {
-	Auth        Auth
-	UserAgent   string
-	HandleFrame func(Frame) error
+	auth         Auth
+	userAgent    string
+	frameHandler func(Frame) error
 
 	w    io.Writer
 	r    *bufio.Reader
@@ -26,21 +26,38 @@ type Client struct {
 	err    error
 }
 
-func NewClient(conn io.ReadWriter) *Client {
+func NewClient(conn io.ReadWriter, options ...Option) *Client {
 	c := &Client{
-		w:           conn,
-		r:           bufio.NewReader(conn),
-		doneCh:      make(chan struct{}),
-		respCh:      make(chan errResponse),
-		Auth:        noAuth{},
-		HandleFrame: func(Frame) error { return nil },
+		w:            conn,
+		r:            bufio.NewReader(conn),
+		doneCh:       make(chan struct{}),
+		respCh:       make(chan errResponse),
+		auth:         noAuth{},
+		frameHandler: func(Frame) error { return nil },
+	}
+	for _, o := range options {
+		o(c)
 	}
 	go c.recvLoop()
 	return c
 }
 
+type Option func(*Client)
+
+func WithAuth(a Auth) Option {
+	return func(c *Client) { c.auth = a }
+}
+
+func WithFrameHandler(handler func(Frame) error) Option {
+	return func(c *Client) { c.frameHandler = handler }
+}
+
+func WithUserAgent(userAgent string) Option {
+	return func(c *Client) { c.userAgent = userAgent }
+}
+
 func (c *Client) Do(req *Request) (*Response, error) {
-	if _, err := c.Auth.Authorize(req, nil); err != nil {
+	if _, err := c.auth.Authorize(req, nil); err != nil {
 		return nil, err
 	}
 	resp, err := c.roundTrip(req)
@@ -48,7 +65,7 @@ func (c *Client) Do(req *Request) (*Response, error) {
 		return nil, err
 	}
 	if resp.StatusCode == StatusUnauthorized {
-		retry, err := c.Auth.Authorize(req, resp)
+		retry, err := c.auth.Authorize(req, resp)
 		if err != nil {
 			return nil, err
 		}
@@ -130,7 +147,7 @@ func (c *Client) recv() error {
 		if err != nil {
 			return err
 		}
-		return c.HandleFrame(f)
+		return c.frameHandler(f)
 	} else {
 		resp, err := ReadResponse(c.r)
 		if err != nil {
@@ -172,8 +189,8 @@ func (c *Client) roundTrip(req *Request) (*Response, error) {
 	c.cseq++
 	clone.Header.Set("CSeq", strconv.Itoa(c.cseq))
 	// add the user-agent
-	if c.UserAgent != "" {
-		clone.Header.Set("User-Agent", c.UserAgent)
+	if c.userAgent != "" {
+		clone.Header.Set("User-Agent", c.userAgent)
 	}
 	// make the request
 	if err := req.WriteTo(c.w); err != nil {
