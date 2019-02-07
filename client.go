@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"errors"
 	"io"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -150,9 +149,6 @@ func (c *Client) recv() error {
 		return c.frameHandler(f)
 	} else {
 		resp, err := ReadResponse(c.r)
-		if err != nil {
-			log.Println(err)
-		}
 		c.respCh <- errResponse{resp: resp, err: err}
 		return err
 	}
