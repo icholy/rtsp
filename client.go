@@ -25,17 +25,19 @@ type Client struct {
 	errMu  sync.Mutex
 	err    error
 
-	Auth      Auth
-	UserAgent string
+	Auth         Auth
+	UserAgent    string
+	HandleBinary func(Binary) error
 }
 
 func NewClient(conn io.ReadWriter) *Client {
 	c := &Client{
-		w:      conn,
-		r:      bufio.NewReader(conn),
-		doneCh: make(chan struct{}),
-		respCh: make(chan errResponse),
-		Auth:   noAuth{},
+		w:            conn,
+		r:            bufio.NewReader(conn),
+		doneCh:       make(chan struct{}),
+		respCh:       make(chan errResponse),
+		Auth:         noAuth{},
+		HandleBinary: func(Binary) error { return nil },
 	}
 	go c.recvLoop()
 	return c
@@ -46,12 +48,17 @@ func (c *Client) recv() error {
 	if err != nil {
 		return err
 	}
-	if len(first) == 1 && first[0] == '$' {
-		panic("got interleaved binary")
+	if first[0] == '$' {
+		bin, err := ReadInterleaved(c.r)
+		if err != nil {
+			return err
+		}
+		return c.HandleBinary(bin)
+	} else {
+		resp, err := ReadResponse(c.r)
+		c.respCh <- errResponse{resp: resp, err: err}
+		return err
 	}
-	resp, err := ReadResponse(c.r)
-	c.respCh <- errResponse{resp: resp, err: err}
-	return err
 }
 
 func (c *Client) recvLoop() {
@@ -67,8 +74,14 @@ func (c *Client) recvLoop() {
 }
 
 func (c *Client) recvResponse() (*Response, error) {
-	er := <-c.respCh
-	return er.resp, er.err
+	select {
+	case re := <-c.respCh:
+		return re.resp, re.err
+	case <-c.doneCh:
+		c.errMu.Lock()
+		defer c.errMu.Unlock()
+		return nil, c.err
+	}
 }
 
 func (c *Client) Do(req *Request) (*Response, error) {
@@ -107,14 +120,7 @@ func (c *Client) roundTrip(req *Request) (*Response, error) {
 		return nil, err
 	}
 	// wait for a response
-	select {
-	case re := <-c.respCh:
-		return re.resp, re.err
-	case <-c.doneCh:
-		c.errMu.Lock()
-		defer c.errMu.Unlock()
-		return nil, c.err
-	}
+	return c.recvResponse()
 }
 
 func (c *Client) Describe(endpoint string) (*Response, error) {
