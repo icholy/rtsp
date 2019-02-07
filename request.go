@@ -9,28 +9,17 @@ import (
 )
 
 const (
-	// Client to server for presentation and stream objects; recommended
-	MethodDescribe = "DESCRIBE"
-	// Bidirectional for client and stream objects; optional
-	MethodAnnounce = "ANNOUNCE"
-	// Bidirectional for client and stream objects; optional
+	MethodAnnounce     = "ANNOUNCE"
+	MethodDescribe     = "DESCRIBE"
 	MethodGetParameter = "GET_PARAMETER"
-	// Bidirectional for client and stream objects; required for Client to server, optional for server to client
-	MethodOptions = "OPTIONS"
-	// Client to server for presentation and stream objects; recommended
-	MethodPause = "PAUSE"
-	// Client to server for presentation and stream objects; required
-	MethodPlay = "PLAY"
-	// Client to server for presentation and stream objects; optional
-	MethodRecord = "RECORD"
-	// Server to client for presentation and stream objects; optional
-	MethodRedirect = "REDIRECT"
-	// Client to server for stream objects; required
-	MethodSetup = "SETUP"
-	// Bidirectional for presentation and stream objects; optional
+	MethodOptions      = "OPTIONS"
+	MethodPause        = "PAUSE"
+	MethodPlay         = "PLAY"
+	MethodRecord       = "RECORD"
+	MethodRedirect     = "REDIRECT"
 	MethodSetParameter = "SET_PARAMETER"
-	// Client to server for presentation and stream objects; required
-	MethodTeardown = "TEARDOWN"
+	MethodSetup        = "SETUP"
+	MethodTeardown     = "TEARDOWN"
 )
 
 type Request struct {
@@ -42,10 +31,7 @@ type Request struct {
 }
 
 func (r Request) WriteTo(w io.Writer) error {
-	if _, err := fmt.Fprintf(w,
-		"%s %s %s\r\n",
-		r.Method, r.URL, r.Proto,
-	); err != nil {
+	if _, err := fmt.Fprintf(w, "%s %s %s\r\n", r.Method, r.URL, r.Proto); err != nil {
 		return err
 	}
 	if err := r.Header.Write(w); err != nil {
