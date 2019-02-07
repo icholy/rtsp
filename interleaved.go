@@ -24,7 +24,7 @@ func ReadInterleaved(b *bufio.Reader) (Binary, error) {
 		return Binary{}, err
 	}
 	var length uint16
-	if err := binary.Read(b, binary.LittleEndian, &length); err != nil {
+	if err := binary.Read(b, binary.BigEndian, &length); err != nil {
 		return Binary{}, err
 	}
 	data := make([]byte, length)
