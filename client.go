@@ -11,11 +11,6 @@ import (
 	"sync"
 )
 
-type errResponse struct {
-	resp *Response
-	err  error
-}
-
 type Client struct {
 	w    io.Writer
 	r    *bufio.Reader
@@ -44,50 +39,6 @@ func NewClient(conn io.ReadWriter) *Client {
 	return c
 }
 
-func (c *Client) recv() error {
-	first, err := c.r.Peek(1)
-	if err != nil {
-		return err
-	}
-	if first[0] == '$' {
-		f, err := ReadFrame(c.r)
-		if err != nil {
-			return err
-		}
-		return c.HandleFrame(f)
-	} else {
-		resp, err := ReadResponse(c.r)
-		if err != nil {
-			log.Println(err)
-		}
-		c.respCh <- errResponse{resp: resp, err: err}
-		return err
-	}
-}
-
-func (c *Client) recvLoop() {
-	for {
-		if err := c.recv(); err != nil {
-			c.errMu.Lock()
-			c.err = err
-			c.errMu.Unlock()
-			close(c.doneCh)
-			return
-		}
-	}
-}
-
-func (c *Client) recvResponse() (*Response, error) {
-	select {
-	case re := <-c.respCh:
-		return re.resp, re.err
-	case <-c.doneCh:
-		c.errMu.Lock()
-		defer c.errMu.Unlock()
-		return nil, c.err
-	}
-}
-
 func (c *Client) Do(req *Request) (*Response, error) {
 	if _, err := c.Auth.Authorize(req, nil); err != nil {
 		return nil, err
@@ -106,25 +57,6 @@ func (c *Client) Do(req *Request) (*Response, error) {
 		}
 	}
 	return resp, nil
-}
-
-func (c *Client) roundTrip(req *Request) (*Response, error) {
-	// clone the request so we can modify it
-	clone := *req
-	clone.Header = cloneHeader(req.Header)
-	// add the sequence number
-	c.cseq++
-	clone.Header.Set("CSeq", strconv.Itoa(c.cseq))
-	// add the user-agent
-	if c.UserAgent != "" {
-		clone.Header.Set("User-Agent", c.UserAgent)
-	}
-	// make the request
-	if err := req.WriteTo(c.w); err != nil {
-		return nil, err
-	}
-	// wait for a response
-	return c.recvResponse()
 }
 
 func (c *Client) Describe(endpoint string) (*Response, error) {
@@ -181,6 +113,74 @@ func (c *Client) Teardown(endpoint, session string) (*Response, error) {
 	}
 	req.Header.Set("Session", session)
 	return c.Do(req)
+}
+
+type errResponse struct {
+	resp *Response
+	err  error
+}
+
+func (c *Client) recv() error {
+	first, err := c.r.Peek(1)
+	if err != nil {
+		return err
+	}
+	if first[0] == '$' {
+		f, err := ReadFrame(c.r)
+		if err != nil {
+			return err
+		}
+		return c.HandleFrame(f)
+	} else {
+		resp, err := ReadResponse(c.r)
+		if err != nil {
+			log.Println(err)
+		}
+		c.respCh <- errResponse{resp: resp, err: err}
+		return err
+	}
+}
+
+func (c *Client) recvLoop() {
+	for {
+		if err := c.recv(); err != nil {
+			c.errMu.Lock()
+			c.err = err
+			c.errMu.Unlock()
+			close(c.doneCh)
+			return
+		}
+	}
+}
+
+func (c *Client) recvResponse() (*Response, error) {
+	select {
+	case re := <-c.respCh:
+		return re.resp, re.err
+	case <-c.doneCh:
+		c.errMu.Lock()
+		defer c.errMu.Unlock()
+		return nil, c.err
+	}
+}
+
+func (c *Client) roundTrip(req *Request) (*Response, error) {
+	// clone the request so we can modify it
+	clone := *req
+	clone.Header = cloneHeader(req.Header)
+	// add the sequence number
+	c.cseq++
+	clone.Header.Set("CSeq", strconv.Itoa(c.cseq))
+	// add the user-agent
+	if c.UserAgent != "" {
+		clone.Header.Set("User-Agent", c.UserAgent)
+	}
+	// make the request
+	if err := req.WriteTo(c.w); err != nil {
+		return nil, err
+	}
+	// wait for a response
+	return c.recvResponse()
 }
 
 func cloneHeader(h http.Header) http.Header {
