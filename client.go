@@ -3,7 +3,6 @@ package rtsp
 import (
 	"bufio"
 	"errors"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -51,14 +50,12 @@ func (c *Client) recv() error {
 		return err
 	}
 	if first[0] == '$' {
-		fmt.Println("Reading Interleaved Frame")
-		bin, err := ReadFrame(c.r)
+		f, err := ReadFrame(c.r)
 		if err != nil {
 			return err
 		}
-		return c.HandleFrame(bin)
+		return c.HandleFrame(f)
 	} else {
-		fmt.Println("Reading Response")
 		resp, err := ReadResponse(c.r)
 		if err != nil {
 			log.Println(err)
