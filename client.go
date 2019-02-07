@@ -3,7 +3,9 @@ package rtsp
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -25,19 +27,19 @@ type Client struct {
 	errMu  sync.Mutex
 	err    error
 
-	Auth         Auth
-	UserAgent    string
-	HandleBinary func(Binary) error
+	Auth        Auth
+	UserAgent   string
+	HandleFrame func(Frame) error
 }
 
 func NewClient(conn io.ReadWriter) *Client {
 	c := &Client{
-		w:            conn,
-		r:            bufio.NewReader(conn),
-		doneCh:       make(chan struct{}),
-		respCh:       make(chan errResponse),
-		Auth:         noAuth{},
-		HandleBinary: func(Binary) error { return nil },
+		w:           conn,
+		r:           bufio.NewReader(conn),
+		doneCh:      make(chan struct{}),
+		respCh:      make(chan errResponse),
+		Auth:        noAuth{},
+		HandleFrame: func(Frame) error { return nil },
 	}
 	go c.recvLoop()
 	return c
@@ -49,13 +51,18 @@ func (c *Client) recv() error {
 		return err
 	}
 	if first[0] == '$' {
-		bin, err := ReadInterleaved(c.r)
+		fmt.Println("Reading Interleaved Frame")
+		bin, err := ReadFrame(c.r)
 		if err != nil {
 			return err
 		}
-		return c.HandleBinary(bin)
+		return c.HandleFrame(bin)
 	} else {
+		fmt.Println("Reading Response")
 		resp, err := ReadResponse(c.r)
+		if err != nil {
+			log.Println(err)
+		}
 		c.respCh <- errResponse{resp: resp, err: err}
 		return err
 	}

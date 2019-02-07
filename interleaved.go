@@ -1,38 +1,36 @@
 package rtsp
 
 import (
-	"bufio"
 	"encoding/binary"
 	"fmt"
+	"io"
 )
 
-type Binary struct {
+type Frame struct {
 	Channel int
 	Data    []byte
 }
 
-func ReadInterleaved(b *bufio.Reader) (Binary, error) {
-	magic, err := b.ReadByte()
-	if err != nil {
-		return Binary{}, err
+type frameHeader struct {
+	Magic   byte
+	Channel uint8
+	Length  uint16
+}
+
+func ReadFrame(r io.Reader) (Frame, error) {
+	var hdr frameHeader
+	if err := binary.Read(r, binary.BigEndian, &hdr); err != nil {
+		return Frame{}, err
 	}
-	if magic != '$' {
-		return Binary{}, fmt.Errorf("invalid magic prefix: %s", magic)
+	if hdr.Magic != '$' {
+		return Frame{}, fmt.Errorf("invalid magic prefix: %v", hdr.Magic)
 	}
-	channel, err := b.ReadByte()
-	if err != nil {
-		return Binary{}, err
+	data := make([]byte, hdr.Length)
+	if _, err := io.ReadFull(r, data); err != nil {
+		return Frame{}, err
 	}
-	var length uint16
-	if err := binary.Read(b, binary.BigEndian, &length); err != nil {
-		return Binary{}, err
-	}
-	data := make([]byte, length)
-	if _, err := b.Read(data); err != nil {
-		return Binary{}, err
-	}
-	return Binary{
-		Channel: int(channel),
+	return Frame{
+		Channel: int(hdr.Channel),
 		Data:    data,
 	}, nil
 }
