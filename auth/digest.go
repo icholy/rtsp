@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-package digest
+package auth
 
 import (
 	"crypto/md5"
@@ -31,12 +31,16 @@ var (
 	ErrAlgNotImplemented = errors.New("Alg not implemented")
 )
 
-type Auth struct {
+func Digest(username, password string) DigestAuth {
+	return DigestAuth{username, password}
+}
+
+type DigestAuth struct {
 	Username string
 	Password string
 }
 
-func (a Auth) Authorize(req *rtsp.Request, resp *rtsp.Response) (bool, error) {
+func (a DigestAuth) Authorize(req *rtsp.Request, resp *rtsp.Response) (bool, error) {
 	if resp == nil {
 		return true, nil
 	}
@@ -58,7 +62,7 @@ func (a Auth) Authorize(req *rtsp.Request, resp *rtsp.Response) (bool, error) {
 	return true, nil
 }
 
-func (a Auth) newCredentials(req *rtsp.Request, c *challenge) *credentials {
+func (a DigestAuth) newCredentials(req *rtsp.Request, c *challenge) *credentials {
 	return &credentials{
 		Username:   a.Username,
 		Password:   a.Password,
