@@ -11,18 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-// Example usage:
-//
-//	t := NewTransport("myUserName", "myP@55w0rd")
-//	req, err := rstp.NewRequest("OPTIONS", "rtsp://notreal.com/path?arg=1", nil)
-//	if err != nil {
-//		return err
-//	}
-//	resp, err := t.RoundTrip(req)
-//	if err != nil {
-//		return err
-//	}
 //
 package digest
 
