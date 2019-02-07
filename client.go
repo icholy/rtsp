@@ -189,7 +189,7 @@ func (c *Client) roundTrip(req *Request) (*Response, error) {
 		clone.Header.Set("User-Agent", c.userAgent)
 	}
 	// make the request
-	if err := req.WriteTo(c.w); err != nil {
+	if err := clone.WriteTo(c.w); err != nil {
 		return nil, err
 	}
 	// wait for a response
