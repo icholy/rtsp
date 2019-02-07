@@ -12,6 +12,10 @@ import (
 )
 
 type Client struct {
+	Auth        Auth
+	UserAgent   string
+	HandleFrame func(Frame) error
+
 	w    io.Writer
 	r    *bufio.Reader
 	cseq int
@@ -20,10 +24,6 @@ type Client struct {
 	respCh chan errResponse
 	errMu  sync.Mutex
 	err    error
-
-	Auth        Auth
-	UserAgent   string
-	HandleFrame func(Frame) error
 }
 
 func NewClient(conn io.ReadWriter) *Client {
