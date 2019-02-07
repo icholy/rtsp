@@ -11,6 +11,10 @@ type BasicAuth struct {
 	Password string
 }
 
+func Basic(username, password string) BasicAuth {
+	return BasicAuth{username, password}
+}
+
 func (a BasicAuth) Authorize(req *rtsp.Request, resp *rtsp.Response) (bool, error) {
 	if resp != nil {
 		return true, nil

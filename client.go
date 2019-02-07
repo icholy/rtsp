@@ -23,8 +23,7 @@ func NewClient(conn io.ReadWriter) *Client {
 		w: conn,
 		r: bufio.NewReader(conn),
 
-		Auth:      noAuth{},
-		UserAgent: "Golang-RTSP",
+		Auth: noAuth{},
 	}
 }
 
