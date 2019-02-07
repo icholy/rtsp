@@ -32,7 +32,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net/http"
 	"strings"
 
 	"github.com/beatgammit/rtsp"
@@ -44,26 +43,57 @@ var (
 	ErrAlgNotImplemented = errors.New("Alg not implemented")
 )
 
+type Auth struct {
+	Username string
+	Password string
+}
+
+func New(username, password string) Auth {
+	return Auth{username, password}
+}
+
+func (a Auth) Authorize(req *rtsp.Request, resp *rtsp.Response) (bool, error) {
+	if resp == nil {
+		return true, nil
+	}
+	chal := resp.Header.Get("WWW-Authenticate")
+	c, err := parseChallenge(chal)
+	if err != nil {
+		return false, err
+	}
+
+	// Form credentials based on the challenge.
+	cr := a.newCredentials(req, c)
+	auth, err := cr.authorize()
+	if err != nil {
+		return false, err
+	}
+
+	// Make authenticated request.
+	req.Header.Set("Authorization", auth)
+	return true, nil
+}
+
+func (a Auth) newCredentials(req *rtsp.Request, c *challenge) *credentials {
+	return &credentials{
+		Username:   a.Username,
+		Password:   a.Password,
+		Method:     req.Method,
+		Realm:      c.Realm,
+		Nonce:      c.Nonce,
+		DigestURI:  req.URL.RequestURI(),
+		Algorithm:  c.Algorithm,
+		Opaque:     c.Opaque,
+		MessageQop: c.Qop, // "auth" must be a single value
+		NonceCount: 0,
+	}
+}
+
 // Transport is an implementation of rtsp.RoundTripper that takes care of
 // digest authentication.
 type Transport struct {
-	Username  string
-	Password  string
-	Transport rtsp.RoundTripper
-}
-
-func (t *Transport) Close() error {
-	return t.Transport.Close()
-}
-
-// NewTransport creates a new digest transport using the rtsp.Transport.
-func NewTransport(username, password string) *Transport {
-	t := &Transport{
-		Username: username,
-		Password: password,
-	}
-	t.Transport = &rtsp.Transport{}
-	return t
+	Username string
+	Password string
 }
 
 type challenge struct {
@@ -116,16 +146,16 @@ func parseChallenge(input string) (*challenge, error) {
 
 type credentials struct {
 	Username   string
+	Password   string
+	Method     string
+	DigestURI  string
 	Realm      string
 	Nonce      string
-	DigestURI  string
 	Algorithm  string
 	Cnonce     string
 	Opaque     string
 	MessageQop string
 	NonceCount int
-	method     string
-	password   string
 }
 
 func h(data string) string {
@@ -139,11 +169,11 @@ func kd(secret, data string) string {
 }
 
 func (c *credentials) ha1() string {
-	return h(fmt.Sprintf("%s:%s:%s", c.Username, c.Realm, c.password))
+	return h(fmt.Sprintf("%s:%s:%s", c.Username, c.Realm, c.Password))
 }
 
 func (c *credentials) ha2() string {
-	return h(fmt.Sprintf("%s:%s", c.method, c.DigestURI))
+	return h(fmt.Sprintf("%s:%s", c.Method, c.DigestURI))
 }
 
 func (c *credentials) resp(cnonce string) (string, error) {
@@ -196,58 +226,4 @@ func (c *credentials) authorize() (string, error) {
 		sl = append(sl, fmt.Sprintf(`cnonce="%s"`, c.Cnonce))
 	}
 	return fmt.Sprintf("Digest %s", strings.Join(sl, ", ")), nil
-}
-
-func (t *Transport) newCredentials(req *rtsp.Request, c *challenge) *credentials {
-	return &credentials{
-		Username:   t.Username,
-		Realm:      c.Realm,
-		Nonce:      c.Nonce,
-		DigestURI:  req.URL.RequestURI(),
-		Algorithm:  c.Algorithm,
-		Opaque:     c.Opaque,
-		MessageQop: c.Qop, // "auth" must be a single value
-		NonceCount: 0,
-		method:     req.Method,
-		password:   t.Password,
-	}
-}
-
-// RoundTrip makes a request expecting a 401 response that will require digest
-// authentication.  It creates the credentials it needs and makes a follow-up
-// request.
-func (t *Transport) RoundTrip(req *rtsp.Request) (*rtsp.Response, error) {
-	if t.Transport == nil {
-		return nil, ErrNilTransport
-	}
-
-	// Copy the request so we don't modify the input.
-	req2 := new(rtsp.Request)
-	*req2 = *req
-	req2.Header = make(http.Header)
-	for k, s := range req.Header {
-		req2.Header[k] = s
-	}
-
-	// Make a request to get the 401 that contains the challenge.
-	resp, err := t.Transport.RoundTrip(req)
-	if err != nil || resp.StatusCode != 401 {
-		return resp, err
-	}
-	chal := resp.Header.Get("WWW-Authenticate")
-	c, err := parseChallenge(chal)
-	if err != nil {
-		return resp, err
-	}
-
-	// Form credentials based on the challenge.
-	cr := t.newCredentials(req2, c)
-	auth, err := cr.authorize()
-	if err != nil {
-		return resp, err
-	}
-
-	// Make authenticated request.
-	req2.Header.Set("Authorization", auth)
-	return t.Transport.RoundTrip(req2)
 }

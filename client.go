@@ -1,30 +1,54 @@
 package rtsp
 
 import (
+	"bufio"
 	"errors"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
 )
 
 type Client struct {
-	cseq      int
+	w    io.Writer
+	r    *bufio.Reader
+	cseq int
+
+	Auth      Auth
 	UserAgent string
-	Transport RoundTripper
 }
 
-func NewClient() *Client {
+func NewClient(conn io.ReadWriter) *Client {
 	return &Client{
+		w: conn,
+		r: bufio.NewReader(conn),
+
+		Auth:      noAuth{},
 		UserAgent: "Golang-RTSP",
-		Transport: &Transport{},
 	}
 }
 
-func (c *Client) Close() error {
-	return c.Transport.Close()
+func (c *Client) Do(req *Request) (*Response, error) {
+	if _, err := c.Auth.Authorize(req, nil); err != nil {
+		return nil, err
+	}
+	resp, err := c.roundTrip(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode == StatusUnauthorized {
+		retry, err := c.Auth.Authorize(req, resp)
+		if err != nil {
+			return nil, err
+		}
+		if retry {
+			return c.roundTrip(req)
+		}
+	}
+	return resp, nil
 }
 
-func (c *Client) Do(req *Request) (*Response, error) {
+func (c *Client) roundTrip(req *Request) (*Response, error) {
 	// clone the request so we can modify it
 	clone := *req
 	clone.Header = cloneHeader(req.Header)
@@ -36,7 +60,10 @@ func (c *Client) Do(req *Request) (*Response, error) {
 		clone.Header.Set("User-Agent", c.UserAgent)
 	}
 	// make the request
-	return c.Transport.RoundTrip(&clone)
+	if err := req.WriteTo(c.w); err != nil {
+		return nil, err
+	}
+	return ReadResponse(c.r)
 }
 
 func (c *Client) Describe(endpoint string) (*Response, error) {
