@@ -7,24 +7,68 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 )
+
+type errResponse struct {
+	resp *Response
+	err  error
+}
 
 type Client struct {
 	w    io.Writer
 	r    *bufio.Reader
 	cseq int
 
+	doneCh chan struct{}
+	respCh chan errResponse
+	errMu  sync.Mutex
+	err    error
+
 	Auth      Auth
 	UserAgent string
 }
 
 func NewClient(conn io.ReadWriter) *Client {
-	return &Client{
-		w: conn,
-		r: bufio.NewReader(conn),
-
-		Auth: noAuth{},
+	c := &Client{
+		w:      conn,
+		r:      bufio.NewReader(conn),
+		doneCh: make(chan struct{}),
+		respCh: make(chan errResponse),
+		Auth:   noAuth{},
 	}
+	go c.recvLoop()
+	return c
+}
+
+func (c *Client) recv() error {
+	first, err := c.r.Peek(1)
+	if err != nil {
+		return err
+	}
+	if len(first) == 1 && first[0] == '$' {
+		panic("got interleaved binary")
+	}
+	resp, err := ReadResponse(c.r)
+	c.respCh <- errResponse{resp: resp, err: err}
+	return err
+}
+
+func (c *Client) recvLoop() {
+	for {
+		if err := c.recv(); err != nil {
+			c.errMu.Lock()
+			c.err = err
+			c.errMu.Unlock()
+			close(c.doneCh)
+			return
+		}
+	}
+}
+
+func (c *Client) recvResponse() (*Response, error) {
+	er := <-c.respCh
+	return er.resp, er.err
 }
 
 func (c *Client) Do(req *Request) (*Response, error) {
@@ -62,7 +106,15 @@ func (c *Client) roundTrip(req *Request) (*Response, error) {
 	if err := req.WriteTo(c.w); err != nil {
 		return nil, err
 	}
-	return ReadResponse(c.r)
+	// wait for a response
+	select {
+	case re := <-c.respCh:
+		return re.resp, re.err
+	case <-c.doneCh:
+		c.errMu.Lock()
+		defer c.errMu.Unlock()
+		return nil, c.err
+	}
 }
 
 func (c *Client) Describe(endpoint string) (*Response, error) {
