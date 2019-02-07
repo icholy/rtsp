@@ -48,10 +48,6 @@ type Auth struct {
 	Password string
 }
 
-func New(username, password string) Auth {
-	return Auth{username, password}
-}
-
 func (a Auth) Authorize(req *rtsp.Request, resp *rtsp.Response) (bool, error) {
 	if resp == nil {
 		return true, nil
