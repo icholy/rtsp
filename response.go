@@ -105,20 +105,15 @@ const (
 
 type Response struct {
 	Proto      string
-	ProtoMajor int
-	ProtoMinor int
-
 	StatusCode int
 	Status     string
-
-	Header http.Header
-	Body   []byte
+	Header     http.Header
+	Body       []byte
 }
 
 func (res Response) WriteTo(w io.Writer) error {
-	if _, err := fmt.Fprintf(w,
-		"%s/%d.%d %d %s\n",
-		res.Proto, res.ProtoMajor, res.ProtoMinor, res.StatusCode, res.Status,
+	if _, err := fmt.Fprintf(w, "%s %d %s\n",
+		res.Proto, res.StatusCode, res.Status,
 	); err != nil {
 		return err
 	}
@@ -155,10 +150,7 @@ func ReadResponse(r *bufio.Reader) (res *Response, err error) {
 	if !ok {
 		return nil, fmt.Errorf("invalid response: %s", s)
 	}
-	res.Proto, res.ProtoMajor, res.ProtoMinor, err = parseResponseVersion(proto)
-	if err != nil {
-		return
-	}
+	res.Proto = proto
 	res.StatusCode = code
 	res.Status = status
 
@@ -181,27 +173,6 @@ func ReadResponse(r *bufio.Reader) (res *Response, err error) {
 		}
 	}
 
-	return
-}
-
-func parseResponseVersion(s string) (proto string, major int, minor int, err error) {
-	parts := strings.SplitN(s, "/", 2)
-	if len(parts) != 2 {
-		err = fmt.Errorf("invalid proto: %s", s)
-		return
-	}
-	proto = parts[0]
-	parts = strings.SplitN(parts[1], ".", 2)
-	if len(parts) != 2 {
-		err = fmt.Errorf("invalid proto: %s", s)
-		return
-	}
-	if major, err = strconv.Atoi(parts[0]); err != nil {
-		return
-	}
-	if minor, err = strconv.Atoi(parts[0]); err != nil {
-		return
-	}
 	return
 }
 
