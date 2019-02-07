@@ -89,13 +89,6 @@ func (a Auth) newCredentials(req *rtsp.Request, c *challenge) *credentials {
 	}
 }
 
-// Transport is an implementation of rtsp.RoundTripper that takes care of
-// digest authentication.
-type Transport struct {
-	Username string
-	Password string
-}
-
 type challenge struct {
 	Realm     string
 	Domain    string
