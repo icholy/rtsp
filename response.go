@@ -168,7 +168,7 @@ func ReadResponse(r *bufio.Reader) (res *Response, err error) {
 			return nil, fmt.Errorf("invalid Content-Length: %v", err)
 		}
 		res.Body = make([]byte, length)
-		if _, err := r.Read(res.Body); err != nil {
+		if _, err := io.ReadFull(r, res.Body); err != nil {
 			return nil, err
 		}
 	}
