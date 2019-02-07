@@ -11,96 +11,49 @@ import (
 )
 
 const (
-	// all requests
-	StatusContinue = 100
-
-	// all requests
-	StatusOK = 200
-	// RECORD
-	StatusCreated = 201
-	// RECORD
-	StatusLowOnStorageSpace = 250
-
-	// all requests
-	StatusMultipleChoices = 300
-	// all requests
-	StatusMovedPermanently = 301
-	// all requests
-	StatusMovedTemporarily = 302
-	// all requests
-	StatusSeeOther = 303
-	// all requests
-	StatusUseProxy = 305
-
-	// all requests
-	StatusBadRequest = 400
-	// all requests
-	StatusUnauthorized = 401
-	// all requests
-	StatusPaymentRequired = 402
-	// all requests
-	StatusForbidden = 403
-	// all requests
-	StatusNotFound = 404
-	// all requests
-	StatusMethodNotAllowed = 405
-	// all requests
-	StatusNotAcceptable = 406
-	// all requests
-	StatusProxyAuthenticationRequired = 407
-	// all requests
-	StatusRequestTimeout = 408
-	// all requests
-	StatusGone = 410
-	// all requests
-	StatusLengthRequired = 411
-	// DESCRIBE, SETUP
-	StatusPreconditionFailed = 412
-	// all requests
-	StatusRequestEntityTooLarge = 413
-	// all requests
-	StatusRequestURITooLong = 414
-	// all requests
-	StatusUnsupportedMediaType = 415
-	// SETUP
-	StatusInvalidparameter = 451
-	// SETUP
-	StatusIllegalConferenceIdentifier = 452
-	// SETUP
-	StatusNotEnoughBandwidth = 453
-	// all requests
-	StatusSessionNotFound = 454
-	// all requests
-	StatusMethodNotValidInThisState = 455
-	// all requests
-	StatusHeaderFieldNotValid = 456
-	// PLAY
-	StatusInvalidRange = 457
-	// SET_PARAMETER
-	StatusParameterIsReadOnly = 458
-	// all requests
-	StatusAggregateOperationNotAllowed = 459
-	// all requests
+	StatusContinue                      = 100
+	StatusOK                            = 200
+	StatusCreated                       = 201
+	StatusLowOnStorageSpace             = 250
+	StatusMultipleChoices               = 300
+	StatusMovedPermanently              = 301
+	StatusMovedTemporarily              = 302
+	StatusSeeOther                      = 303
+	StatusUseProxy                      = 305
+	StatusBadRequest                    = 400
+	StatusUnauthorized                  = 401
+	StatusPaymentRequired               = 402
+	StatusForbidden                     = 403
+	StatusNotFound                      = 404
+	StatusMethodNotAllowed              = 405
+	StatusNotAcceptable                 = 406
+	StatusProxyAuthenticationRequired   = 407
+	StatusRequestTimeout                = 408
+	StatusGone                          = 410
+	StatusLengthRequired                = 411
+	StatusPreconditionFailed            = 412
+	StatusRequestEntityTooLarge         = 413
+	StatusRequestURITooLong             = 414
+	StatusUnsupportedMediaType          = 415
+	StatusInvalidparameter              = 451
+	StatusIllegalConferenceIdentifier   = 452
+	StatusNotEnoughBandwidth            = 453
+	StatusSessionNotFound               = 454
+	StatusMethodNotValidInThisState     = 455
+	StatusHeaderFieldNotValid           = 456
+	StatusInvalidRange                  = 457
+	StatusParameterIsReadOnly           = 458
+	StatusAggregateOperationNotAllowed  = 459
 	StatusOnlyAggregateOperationAllowed = 460
-	// all requests
-	StatusUnsupportedTransport = 461
-	// all requests
-	StatusDestinationUnreachable = 462
-
-	// all requests
-	StatusInternalServerError = 500
-	// all requests
-	StatusNotImplemented = 501
-	// all requests
-	StatusBadGateway = 502
-	// all requests
-	StatusServiceUnavailable = 503
-	// all requests
-	StatusGatewayTimeout = 504
-	// all requests
-	StatusRTSPVersionNotSupported = 505
-	// all requests
-	StatusOptionNotsupport = 551
+	StatusUnsupportedTransport          = 461
+	StatusDestinationUnreachable        = 462
+	StatusInternalServerError           = 500
+	StatusNotImplemented                = 501
+	StatusBadGateway                    = 502
+	StatusServiceUnavailable            = 503
+	StatusGatewayTimeout                = 504
+	StatusRTSPVersionNotSupported       = 505
+	StatusOptionNotsupport              = 551
 )
 
 type Response struct {
