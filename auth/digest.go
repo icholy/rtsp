@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+// most of this code was taken from: https://github.com/bobziuchkovski/digest
 package auth
 
 import (
@@ -31,16 +32,12 @@ var (
 	ErrAlgNotImplemented = errors.New("Alg not implemented")
 )
 
-func Digest(username, password string) DigestAuth {
-	return DigestAuth{username, password}
-}
-
-type DigestAuth struct {
+type Digest struct {
 	Username string
 	Password string
 }
 
-func (a DigestAuth) Authorize(req *rtsp.Request, resp *rtsp.Response) (bool, error) {
+func (a Digest) Authorize(req *rtsp.Request, resp *rtsp.Response) (bool, error) {
 	if resp == nil {
 		return true, nil
 	}
@@ -50,20 +47,7 @@ func (a DigestAuth) Authorize(req *rtsp.Request, resp *rtsp.Response) (bool, err
 		return false, err
 	}
 
-	// Form credentials based on the challenge.
-	cr := a.newCredentials(req, c)
-	auth, err := cr.authorize()
-	if err != nil {
-		return false, err
-	}
-
-	// Make authenticated request.
-	req.Header.Set("Authorization", auth)
-	return true, nil
-}
-
-func (a DigestAuth) newCredentials(req *rtsp.Request, c *challenge) *credentials {
-	return &credentials{
+	cr := &credentials{
 		Username:   a.Username,
 		Password:   a.Password,
 		Method:     req.Method,
@@ -75,6 +59,15 @@ func (a DigestAuth) newCredentials(req *rtsp.Request, c *challenge) *credentials
 		MessageQop: c.Qop, // "auth" must be a single value
 		NonceCount: 0,
 	}
+
+	auth, err := cr.authorize()
+	if err != nil {
+		return false, err
+	}
+
+	// Make authenticated request.
+	req.Header.Set("Authorization", auth)
+	return true, nil
 }
 
 type challenge struct {
