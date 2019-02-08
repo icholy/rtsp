@@ -3,6 +3,7 @@ package rtp
 import (
 	"encoding/binary"
 	"errors"
+	"time"
 )
 
 const (
@@ -26,16 +27,16 @@ const (
 // |                             ....                              |
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 type Packet struct {
-	VPXCC byte     // Version, Padding, Extension, Contributing Source Count
-	MPT   byte     // Marker, Payload Type
-	SN    uint16   // Sequense Number
-	TS    uint32   // Timestamp
-	SSRC  uint32   // Synchronization Source Identifier
-	CSRC  []uint32 // Contributing Source Identifiers
-	XH    uint16   // Extension Header (profile dependent)
-	XL    uint16   // Extension Length (in `uint`s not inclusing this header)
-	XD    []byte   // Extension Data
-	PL    []byte   // Payload
+	VPXCC   byte     // Version, Padding, Extension, Contributing Source Count
+	MPT     byte     // Marker, Payload Type
+	SN      uint16   // Sequense Number
+	TS      uint32   // Timestamp
+	SSRC    uint32   // Synchronization Source Identifier
+	CSRC    []uint32 // Contributing Source Identifiers
+	XH      uint16   // Extension Header (profile dependent)
+	XL      uint16   // Extension Length (in `uint`s not inclusing this header)
+	XD      []byte   // Extension Data
+	Payload []byte   // Payload
 }
 
 var order = binary.BigEndian
@@ -70,10 +71,15 @@ func Parse(buf []byte) (*Packet, error) {
 		}
 	}
 
-	packet.PL = buf[off:]
+	packet.Payload = buf[off:]
 
 	//s.rtpChan <- packet
 	return packet, nil
+}
+
+// Time returns Timestamp value
+func (p Packet) Time() time.Time {
+	return time.Unix(int64(p.TS), 0)
 }
 
 // Padding returns Padding flag value of the packet.
@@ -87,8 +93,8 @@ func (p Packet) Extension() bool {
 }
 
 // ContributingCount returns Contributing Source Count of the packet.
-func (p Packet) ContributingCount() byte {
-	return p.VPXCC & 0x0F
+func (p Packet) ContributingCount() int {
+	return int(p.VPXCC & 0x0F)
 }
 
 // Marker returns Marker value of the packet.
@@ -97,6 +103,6 @@ func (p Packet) Marker() bool {
 }
 
 // PayloadType returns Payload Type of the packet.
-func (p Packet) PayloadType() byte {
-	return p.MPT & 0x7F
+func (p Packet) PayloadType() int {
+	return int(p.MPT & 0x7F)
 }
