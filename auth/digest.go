@@ -27,7 +27,6 @@ import (
 )
 
 var (
-	ErrNilTransport      = errors.New("Transport is nil")
 	ErrBadChallenge      = errors.New("Challenge is bad")
 	ErrAlgNotImplemented = errors.New("Alg not implemented")
 )
