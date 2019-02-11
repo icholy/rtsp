@@ -8,6 +8,7 @@ import (
 	"strings"
 )
 
+// RTSP Verbs
 const (
 	MethodAnnounce     = "ANNOUNCE"
 	MethodDescribe     = "DESCRIBE"
@@ -22,6 +23,7 @@ const (
 	MethodTeardown     = "TEARDOWN"
 )
 
+// Request contains all the information required to send a request
 type Request struct {
 	Method string
 	URL    *url.URL
@@ -30,6 +32,7 @@ type Request struct {
 	Body   []byte
 }
 
+// WriteTo writes the request to the provided router in the wire format.
 func (r Request) WriteTo(w io.Writer) error {
 	if _, err := fmt.Fprintf(w, "%s %s %s\r\n", r.Method, r.URL, r.Proto); err != nil {
 		return err
@@ -46,6 +49,7 @@ func (r Request) WriteTo(w io.Writer) error {
 	return nil
 }
 
+// String returns a string representation of the request.
 func (r Request) String() string {
 	var s strings.Builder
 	if err := r.WriteTo(&s); err != nil {
@@ -54,6 +58,9 @@ func (r Request) String() string {
 	return s.String()
 }
 
+// NewRequest constructs a new request.
+// The endpoint must be an absolute url.
+// The body may be nil.
 func NewRequest(method, endpoint string, body []byte) (*Request, error) {
 	u, err := url.Parse(endpoint)
 	if err != nil {

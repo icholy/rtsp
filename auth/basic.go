@@ -6,11 +6,13 @@ import (
 	"github.com/beatgammit/rtsp"
 )
 
+// Basic is an Auth implementation for basic authentication.
 type Basic struct {
 	Username string
 	Password string
 }
 
+// Authorize the request
 func (a Basic) Authorize(req *rtsp.Request, resp *rtsp.Response) (bool, error) {
 	if resp != nil {
 		return true, nil

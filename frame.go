@@ -6,6 +6,8 @@ import (
 	"io"
 )
 
+// Frame of interleaved binary data.
+// This is encoded in RTP format.
 type Frame struct {
 	Channel int
 	Data    []byte
@@ -17,6 +19,7 @@ type frameHeader struct {
 	Length  uint16
 }
 
+// ReadFrame reads an interleaved binary frame from the reader.
 func ReadFrame(r io.Reader) (Frame, error) {
 	var hdr frameHeader
 	if err := binary.Read(r, binary.BigEndian, &hdr); err != nil {

@@ -31,11 +31,13 @@ var (
 	ErrAlgNotImplemented = errors.New("Alg not implemented")
 )
 
+// Digest is an Auth implementation for the digest authentication.
 type Digest struct {
 	Username string
 	Password string
 }
 
+// Authorize the request.
 func (a Digest) Authorize(req *rtsp.Request, resp *rtsp.Response) (bool, error) {
 	if resp == nil {
 		return true, nil

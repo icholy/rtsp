@@ -10,6 +10,7 @@ import (
 	"strings"
 )
 
+// RTSP response status codes
 const (
 	StatusContinue                      = 100
 	StatusOK                            = 200
@@ -56,6 +57,7 @@ const (
 	StatusOptionNotsupport              = 551
 )
 
+// Response is a parsed RTSP response.
 type Response struct {
 	Proto      string
 	StatusCode int
@@ -64,6 +66,7 @@ type Response struct {
 	Body       []byte
 }
 
+// WriteTo writes the response to the provided writer in wire format.
 func (res Response) WriteTo(w io.Writer) error {
 	if _, err := fmt.Fprintf(w, "%s %d %s\n",
 		res.Proto, res.StatusCode, res.Status,
@@ -82,6 +85,7 @@ func (res Response) WriteTo(w io.Writer) error {
 	return nil
 }
 
+// String returns the string representation of the response.
 func (res Response) String() string {
 	var s strings.Builder
 	if err := res.WriteTo(&s); err != nil {
@@ -90,6 +94,7 @@ func (res Response) String() string {
 	return s.String()
 }
 
+// ReadResponse reads and parses an RTSP response from the provided reader.
 func ReadResponse(r *bufio.Reader) (res *Response, err error) {
 	tp := textproto.NewReader(r)
 	res = new(Response)

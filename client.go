@@ -10,6 +10,8 @@ import (
 	"sync"
 )
 
+// Client allows sending and recieving rtsp data over a
+// socket connection.
 type Client struct {
 	auth         Auth
 	userAgent    string
@@ -25,6 +27,7 @@ type Client struct {
 	err    error
 }
 
+// NewClient constructs an rtsp Client wrapping a connection.
 func NewClient(conn io.ReadWriter, options ...Option) *Client {
 	c := &Client{
 		w:            conn,
@@ -41,20 +44,27 @@ func NewClient(conn io.ReadWriter, options ...Option) *Client {
 	return c
 }
 
+// Option configures a client.
 type Option func(*Client)
 
+// WithAuth configures the client authentication.
 func WithAuth(a Auth) Option {
 	return func(c *Client) { c.auth = a }
 }
 
+// WithFrameHandler sets a callback for incoming interleaved
+// binary frames.
 func WithFrameHandler(handler func(Frame) error) Option {
 	return func(c *Client) { c.frameHandler = handler }
 }
 
+// WithUserAgent specifies the user-agent to be sent with
+// each request.
 func WithUserAgent(userAgent string) Option {
 	return func(c *Client) { c.userAgent = userAgent }
 }
 
+// Do sends a request and reads the response.
 func (c *Client) Do(req *Request) (*Response, error) {
 	if _, err := c.auth.Authorize(req, nil); err != nil {
 		return nil, err
@@ -75,6 +85,7 @@ func (c *Client) Do(req *Request) (*Response, error) {
 	return resp, nil
 }
 
+// Describe is a helper method for sending an DESCRIBE request.
 func (c *Client) Describe(endpoint string) (*Response, error) {
 	req, err := NewRequest(MethodDescribe, endpoint, nil)
 	if err != nil {
@@ -84,6 +95,7 @@ func (c *Client) Describe(endpoint string) (*Response, error) {
 	return c.Do(req)
 }
 
+// Options is a helper method for sending an OPTIONS request.
 func (c *Client) Options(endpoint string) (*Response, error) {
 	req, err := NewRequest(MethodOptions, endpoint, nil)
 	if err != nil {
@@ -92,6 +104,7 @@ func (c *Client) Options(endpoint string) (*Response, error) {
 	return c.Do(req)
 }
 
+// Setup is a helper method for sending a SETUP request.
 func (c *Client) Setup(endpoint, transport string) (*Response, error) {
 	req, err := NewRequest(MethodSetup, endpoint, nil)
 	if err != nil {
@@ -101,6 +114,7 @@ func (c *Client) Setup(endpoint, transport string) (*Response, error) {
 	return c.Do(req)
 }
 
+// Session parses the session id from a SETUP response.
 func Session(resp *Response) (string, error) {
 	if resp.StatusCode != StatusOK {
 		return "", errors.New(resp.Status)
@@ -112,6 +126,7 @@ func Session(resp *Response) (string, error) {
 	return strings.TrimSpace(fields[0]), nil
 }
 
+// Play is a helper method for sending a PLAY request.
 func (c *Client) Play(endpoint, session string) (*Response, error) {
 	req, err := NewRequest(MethodPlay, endpoint, nil)
 	if err != nil {
@@ -122,6 +137,7 @@ func (c *Client) Play(endpoint, session string) (*Response, error) {
 	return c.Do(req)
 }
 
+// Teardown is a helper method for sending a TEARDOWN request.
 func (c *Client) Teardown(endpoint, session string) (*Response, error) {
 	req, err := NewRequest(MethodTeardown, endpoint, nil)
 	if err != nil {
