@@ -23,7 +23,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/beatgammit/rtsp"
+	"github.com/icholy/rtsp"
 )
 
 var (
