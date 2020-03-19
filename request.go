@@ -76,6 +76,9 @@ func NewRequest(method, endpoint string, body []byte) (*Request, error) {
 		Header: http.Header{},
 		Body:   body,
 	}
+	if len(body) > 0 {
+		req.Header.Set("Content-Length", strconv.Itoa(len(body)))
+	}
 	return req, nil
 }
 

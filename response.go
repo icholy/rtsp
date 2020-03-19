@@ -104,6 +104,9 @@ func NewResponse(code int, status string, body []byte) (*Response, error) {
 		Header:     http.Header{},
 		Body:       body,
 	}
+	if len(body) != 0 {
+		res.Header.Set("Content-Length", strconv.Itoa(len(body)))
+	}
 	return res, nil
 }
 
