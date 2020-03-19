@@ -20,6 +20,22 @@ type frameHeader struct {
 	Length  uint16
 }
 
+// Write the interleaved frame to the provided writer.
+func (f Frame) Write(w io.Writer) error {
+	hdr := frameHeader{
+		Magic:   '$',
+		Channel: uint8(f.Channel),
+		Length:  uint16(len(f.Data)),
+	}
+	if err := binary.Write(w, binary.BigEndian, hdr); err != nil {
+		return err
+	}
+	if _, err := w.Write(f.Data); err != nil {
+		return err
+	}
+	return nil
+}
+
 // ReadFrame reads an interleaved binary frame from the reader.
 func ReadFrame(r io.Reader) (Frame, error) {
 	var hdr frameHeader
