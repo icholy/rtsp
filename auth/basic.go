@@ -14,11 +14,8 @@ type Basic struct {
 
 // Authorize the request
 func (a Basic) Authorize(req *rtsp.Request, resp *rtsp.Response) (bool, error) {
-	if resp != nil {
-		return true, nil
-	}
 	req.Header.Set("Authorization", "Basic "+a.encoded())
-	return true, nil
+	return false, nil
 }
 
 func (a Basic) encoded() string {
