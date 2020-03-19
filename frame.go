@@ -1,6 +1,7 @@
 package rtsp
 
 import (
+	"bufio"
 	"encoding/binary"
 	"fmt"
 	"io"
@@ -36,4 +37,13 @@ func ReadFrame(r io.Reader) (Frame, error) {
 		Channel: int(hdr.Channel),
 		Data:    data,
 	}, nil
+}
+
+// IsFrameNext returns true when the next message is an interleaved frame
+func IsFrameNext(r *bufio.Reader) (bool, error) {
+	first, err := r.Peek(1)
+	if err != nil {
+		return false, err
+	}
+	return first[0] == '$', nil
 }

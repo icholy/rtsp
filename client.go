@@ -153,11 +153,11 @@ type errResponse struct {
 }
 
 func (c *Client) recv() error {
-	first, err := c.r.Peek(1)
+	ok, err := IsFrameNext(c.r)
 	if err != nil {
 		return err
 	}
-	if first[0] == '$' {
+	if ok {
 		f, err := ReadFrame(c.r)
 		if err != nil {
 			return err
