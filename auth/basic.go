@@ -3,7 +3,7 @@ package auth
 import (
 	"encoding/base64"
 
-	"github.com/beatgammit/rtsp"
+	"github.com/icholy/rtsp"
 )
 
 // Basic is an Auth implementation for basic authentication.
