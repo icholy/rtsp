@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"errors"
 	"io"
-	"net/http"
 	"strconv"
 	"strings"
 	"sync"
@@ -196,7 +195,7 @@ func (c *Client) recvResponse() (*Response, error) {
 func (c *Client) roundTrip(req *Request) (*Response, error) {
 	// clone the request so we can modify it
 	clone := *req
-	clone.Header = cloneHeader(req.Header)
+	clone.Header = req.Header.Clone()
 	// add the sequence number
 	c.cseq++
 	clone.Header.Set("CSeq", strconv.Itoa(c.cseq))
@@ -210,14 +209,4 @@ func (c *Client) roundTrip(req *Request) (*Response, error) {
 	}
 	// wait for a response
 	return c.recvResponse()
-}
-
-func cloneHeader(h http.Header) http.Header {
-	h2 := make(http.Header, len(h))
-	for k, vv := range h {
-		vv2 := make([]string, len(vv))
-		copy(vv2, vv)
-		h2[k] = vv2
-	}
-	return h2
 }
