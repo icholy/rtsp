@@ -1,10 +1,13 @@
 package rtsp
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"net/http"
+	"net/textproto"
 	"net/url"
+	"strconv"
 	"strings"
 )
 
@@ -74,4 +77,56 @@ func NewRequest(method, endpoint string, body []byte) (*Request, error) {
 		Body:   body,
 	}
 	return req, nil
+}
+
+// ReadRequest reads and parses an RTSP request from the provided reader.
+func ReadRequest(r *bufio.Reader) (req *Request, err error) {
+	tp := textproto.NewReader(r)
+	req = new(Request)
+
+	// read response line
+	var s string
+	if s, err = tp.ReadLine(); err != nil {
+		return
+	}
+	method, url, proto, ok := parseRequestLine(s)
+	if !ok {
+		return nil, fmt.Errorf("invalid request: %s", s)
+	}
+	req.Method = method
+	req.URL = url
+	req.Proto = proto
+
+	// read headers
+	header, err := tp.ReadMIMEHeader()
+	if err != nil {
+		return nil, err
+	}
+	req.Header = http.Header(header)
+
+	// read body
+	if cl := header.Get("Content-Length"); cl != "" {
+		length, err := strconv.ParseInt(cl, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("invalid Content-Length: %v", err)
+		}
+		req.Body = make([]byte, length)
+		if _, err := io.ReadFull(r, req.Body); err != nil {
+			return nil, err
+		}
+	}
+
+	return
+}
+
+func parseRequestLine(line string) (method string, uri *url.URL, proto string, ok bool) {
+	parts := strings.SplitN(line, " ", 3)
+	if len(parts) != 3 {
+		return
+	}
+	u, err := url.Parse(parts[1])
+	if err != nil {
+		return
+	}
+	return parts[0], u, parts[2], true
 }

@@ -94,6 +94,19 @@ func (res Response) String() string {
 	return s.String()
 }
 
+// NewResponse constructs a new response.
+// The body may be nil.
+func NewResponse(code int, status string, body []byte) (*Response, error) {
+	res := &Response{
+		Proto:      "RTSP/1.0",
+		StatusCode: code,
+		Status:     status,
+		Header:     http.Header{},
+		Body:       body,
+	}
+	return res, nil
+}
+
 // ReadResponse reads and parses an RTSP response from the provided reader.
 func ReadResponse(r *bufio.Reader) (res *Response, err error) {
 	tp := textproto.NewReader(r)
