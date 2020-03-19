@@ -37,6 +37,14 @@ type Digest struct {
 	Password string
 }
 
+// WithDigest returns a client option for using digest auth
+func WithDigest(username, password string) rtsp.Option {
+	return rtsp.WithAuth(Digest{
+		Username: username,
+		Password: password,
+	})
+}
+
 // Authorize the request.
 func (a Digest) Authorize(req *rtsp.Request, resp *rtsp.Response) (bool, error) {
 	if resp == nil {

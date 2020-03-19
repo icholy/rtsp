@@ -12,6 +12,14 @@ type Basic struct {
 	Password string
 }
 
+// WithBasic returns an Option for using basic auth
+func WithBasic(username, password string) rtsp.Option {
+	return rtsp.WithAuth(Basic{
+		Username: username,
+		Password: password,
+	})
+}
+
 // Authorize the request
 func (a Basic) Authorize(req *rtsp.Request, resp *rtsp.Response) (bool, error) {
 	req.Header.Set("Authorization", "Basic "+a.encoded())
