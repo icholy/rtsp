@@ -66,8 +66,8 @@ type Response struct {
 	Body       []byte
 }
 
-// WriteTo writes the response to the provided writer in wire format.
-func (res Response) WriteTo(w io.Writer) error {
+// Write the response to the provided writer in wire format.
+func (res Response) Write(w io.Writer) error {
 	if _, err := fmt.Fprintf(w, "%s %d %s\n",
 		res.Proto, res.StatusCode, res.Status,
 	); err != nil {
@@ -88,7 +88,7 @@ func (res Response) WriteTo(w io.Writer) error {
 // String returns the string representation of the response.
 func (res Response) String() string {
 	var s strings.Builder
-	if err := res.WriteTo(&s); err != nil {
+	if err := res.Write(&s); err != nil {
 		return err.Error()
 	}
 	return s.String()
