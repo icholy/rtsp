@@ -4,8 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"net/http"
-	"net/textproto"
 	"net/url"
 	"strconv"
 	"strings"
@@ -31,7 +29,7 @@ type Request struct {
 	Method string
 	URL    *url.URL
 	Proto  string
-	Header http.Header
+	Header Header
 	Body   []byte
 }
 
@@ -73,23 +71,22 @@ func NewRequest(method, endpoint string, body []byte) (*Request, error) {
 		Method: method,
 		URL:    u,
 		Proto:  "RTSP/1.0",
-		Header: http.Header{},
+		Header: Header{},
 		Body:   body,
 	}
 	if len(body) > 0 {
-		req.Header.Set("Content-Length", strconv.Itoa(len(body)))
+		req.Header["Content-Length"] = strconv.Itoa(len(body))
 	}
 	return req, nil
 }
 
 // ReadRequest reads and parses an RTSP request from the provided reader.
 func ReadRequest(r *bufio.Reader) (req *Request, err error) {
-	tp := textproto.NewReader(r)
 	req = new(Request)
 
 	// read response line
 	var s string
-	if s, err = tp.ReadLine(); err != nil {
+	if s, err = readLine(r); err != nil {
 		return
 	}
 	method, url, proto, ok := parseRequestLine(s)
@@ -101,14 +98,13 @@ func ReadRequest(r *bufio.Reader) (req *Request, err error) {
 	req.Proto = proto
 
 	// read headers
-	header, err := tp.ReadMIMEHeader()
+	req.Header, err = ReadHeader(r)
 	if err != nil {
-		return nil, err
+		return
 	}
-	req.Header = http.Header(header)
 
 	// read body
-	if cl := header.Get("Content-Length"); cl != "" {
+	if cl, ok := req.Header["Content-Length"]; ok {
 		length, err := strconv.ParseInt(cl, 10, 64)
 		if err != nil {
 			return nil, fmt.Errorf("invalid Content-Length: %v", err)
