@@ -33,12 +33,12 @@ func ReadHeader(r *bufio.Reader) (Header, error) {
 		if len(line) == 0 {
 			return h, nil
 		}
-		parts := strings.SplitN(line, ":", 2)
-		if len(parts) != 2 {
+		index := strings.IndexByte(line, ':')
+		if index == -1 {
 			return nil, fmt.Errorf("invalid header: %q", line)
 		}
-		key, value := strings.TrimSpace(parts[0]), strings.TrimSpace(parts[1])
-		h[key] = value
+		key := strings.TrimSpace(line[:index])
+		h[key] = strings.TrimSpace(line[index+1:])
 	}
 }
 
