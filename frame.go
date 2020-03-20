@@ -55,8 +55,9 @@ func ReadFrame(r io.Reader) (Frame, error) {
 	}, nil
 }
 
-// IsFrameNext returns true when the next message is an interleaved frame
-func IsFrameNext(r *bufio.Reader) (bool, error) {
+// IsFrame returns true when the next message is an interleaved frame.
+// This will block until at least one byte is available in the reader
+func IsFrame(r *bufio.Reader) (bool, error) {
 	first, err := r.Peek(1)
 	if err != nil {
 		return false, err

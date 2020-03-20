@@ -152,7 +152,7 @@ type errResponse struct {
 }
 
 func (c *Client) recv() error {
-	ok, err := IsFrameNext(c.r)
+	ok, err := IsFrame(c.r)
 	if err != nil {
 		return err
 	}
