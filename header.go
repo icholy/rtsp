@@ -14,7 +14,8 @@ type Header map[string]string
 // Write the header key/values to the provided writer
 func (h Header) Write(w io.Writer) error {
 	for key, value := range h {
-		if _, err := fmt.Fprintf(w, "%s: %s\r\n", key, value); err != nil {
+		line := key + ": " + value + "\r\n"
+		if _, err := w.Write([]byte(line)); err != nil {
 			return err
 		}
 	}
