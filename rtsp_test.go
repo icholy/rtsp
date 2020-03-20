@@ -11,6 +11,8 @@ import (
 func TestResponse(t *testing.T) {
 	res, err := NewResponse(StatusNotFound, "Not Found", []byte("Hello world"))
 	assert.NilError(t, err)
+	res.Header["CSeq"] = "100"
+	res.Header["foo"] = "bar"
 
 	// encode it
 	var buf bytes.Buffer
@@ -26,6 +28,8 @@ func TestResponse(t *testing.T) {
 func TestRequest(t *testing.T) {
 	req, err := NewRequest(MethodOptions, "rtsp://someurl", []byte("what"))
 	assert.NilError(t, err)
+	req.Header["CSeq"] = "1"
+	req.Header["Authorize"] = "secret"
 
 	// encode it
 	var buf bytes.Buffer
@@ -49,8 +53,14 @@ func TestFrame(t *testing.T) {
 	err := f.Write(&buf)
 	assert.NilError(t, err)
 
+	// make sure it's recognized as a frame
+	br := bufio.NewReader(&buf)
+	ok, err := IsFrame(br)
+	assert.NilError(t, err)
+	assert.Assert(t, ok)
+
 	// decode it
-	f2, err := ReadFrame(&buf)
+	f2, err := ReadFrame(br)
 	assert.NilError(t, err)
 	assert.DeepEqual(t, f, f2)
 }
