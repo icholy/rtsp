@@ -1,4 +1,10 @@
 
-# RTSP Client
+# RTSP
 
-> A package for connecting to and reading from an RTSP stream.
+> A low level package for writing rtsp servers and clients
+
+Supports:
+
+* Interleaved data frames.
+* Basic/Digest authentication.
+* RTP decoding.
