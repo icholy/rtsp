@@ -44,7 +44,7 @@ func ReadHeader(r *bufio.Reader) (Header, error) {
 
 // Clone returns a copy of the headers
 func (h Header) Clone() Header {
-	h2 := Header{}
+	h2 := make(Header, len(h))
 	for k, v := range h {
 		h2[k] = v
 	}
