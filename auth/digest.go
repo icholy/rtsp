@@ -50,7 +50,7 @@ func (a Digest) Authorize(req *rtsp.Request, resp *rtsp.Response) (bool, error) 
 	if resp == nil {
 		return true, nil
 	}
-	chal := resp.Header.Get("WWW-Authenticate")
+	chal := resp.Header["WWW-Authenticate"]
 	c, err := parseChallenge(chal)
 	if err != nil {
 		return false, err
@@ -75,7 +75,7 @@ func (a Digest) Authorize(req *rtsp.Request, resp *rtsp.Response) (bool, error) 
 	}
 
 	// Make authenticated request.
-	req.Header.Set("Authorization", auth)
+	req.Header["Authorization"] = auth
 	return true, nil
 }
 

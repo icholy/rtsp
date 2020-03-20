@@ -22,7 +22,7 @@ func WithBasic(username, password string) rtsp.Option {
 
 // Authorize the request
 func (a Basic) Authorize(req *rtsp.Request, resp *rtsp.Response) (bool, error) {
-	req.Header.Set("Authorization", "Basic "+a.encoded())
+	req.Header["Authorization"] = "Basic " + a.encoded()
 	return false, nil
 }
 
