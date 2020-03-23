@@ -8,54 +8,6 @@ import (
 	"strings"
 )
 
-// RTSP response status codes
-const (
-	StatusContinue                      = 100
-	StatusOK                            = 200
-	StatusCreated                       = 201
-	StatusLowOnStorageSpace             = 250
-	StatusMultipleChoices               = 300
-	StatusMovedPermanently              = 301
-	StatusMovedTemporarily              = 302
-	StatusSeeOther                      = 303
-	StatusNotModified                   = 304
-	StatusUseProxy                      = 305
-	StatusBadRequest                    = 400
-	StatusUnauthorized                  = 401
-	StatusPaymentRequired               = 402
-	StatusForbidden                     = 403
-	StatusNotFound                      = 404
-	StatusMethodNotAllowed              = 405
-	StatusNotAcceptable                 = 406
-	StatusProxyAuthenticationRequired   = 407
-	StatusRequestTimeout                = 408
-	StatusGone                          = 410
-	StatusLengthRequired                = 411
-	StatusPreconditionFailed            = 412
-	StatusRequestEntityTooLarge         = 413
-	StatusRequestURITooLong             = 414
-	StatusUnsupportedMediaType          = 415
-	StatusInvalidparameter              = 451
-	StatusIllegalConferenceIdentifier   = 452
-	StatusNotEnoughBandwidth            = 453
-	StatusSessionNotFound               = 454
-	StatusMethodNotValidInThisState     = 455
-	StatusHeaderFieldNotValid           = 456
-	StatusInvalidRange                  = 457
-	StatusParameterIsReadOnly           = 458
-	StatusAggregateOperationNotAllowed  = 459
-	StatusOnlyAggregateOperationAllowed = 460
-	StatusUnsupportedTransport          = 461
-	StatusDestinationUnreachable        = 462
-	StatusInternalServerError           = 500
-	StatusNotImplemented                = 501
-	StatusBadGateway                    = 502
-	StatusServiceUnavailable            = 503
-	StatusGatewayTimeout                = 504
-	StatusRTSPVersionNotSupported       = 505
-	StatusOptionNotsupport              = 551
-)
-
 // Response is a parsed RTSP response.
 type Response struct {
 	Proto      string
@@ -95,11 +47,11 @@ func (res Response) String() string {
 
 // NewResponse constructs a new response.
 // The body may be nil.
-func NewResponse(code int, status string, body []byte) (*Response, error) {
+func NewResponse(code int, body []byte) (*Response, error) {
 	res := &Response{
 		Proto:      "RTSP/1.0",
 		StatusCode: code,
-		Status:     status,
+		Status:     StatusText(code),
 		Header:     Header{},
 		Body:       body,
 	}

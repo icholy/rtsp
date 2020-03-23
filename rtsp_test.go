@@ -9,7 +9,7 @@ import (
 )
 
 func TestResponse(t *testing.T) {
-	res, err := NewResponse(StatusNotFound, "Not Found", []byte("Hello world"))
+	res, err := NewResponse(StatusNotFound, []byte("Hello world"))
 	assert.NilError(t, err)
 	res.Header["CSeq"] = "100"
 	res.Header["foo"] = "bar"
