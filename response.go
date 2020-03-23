@@ -18,6 +18,7 @@ const (
 	StatusMovedPermanently              = 301
 	StatusMovedTemporarily              = 302
 	StatusSeeOther                      = 303
+	StatusNotModified                   = 304
 	StatusUseProxy                      = 305
 	StatusBadRequest                    = 400
 	StatusUnauthorized                  = 401
