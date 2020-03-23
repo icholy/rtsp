@@ -34,7 +34,7 @@ type Request struct {
 
 // Write the request to the provided writer in the wire format.
 func (r Request) Write(w io.Writer) error {
-	if _, err := fmt.Fprintf(w, "%s %s %s\r\n", r.Method, r.URL, Version); err != nil {
+	if _, err := fmt.Fprintf(w, "%s %s %s\r\n", r.Method, r.URL, version); err != nil {
 		return err
 	}
 	if err := r.Header.Write(w); err != nil {
@@ -91,8 +91,8 @@ func ReadRequest(r *bufio.Reader) (req *Request, err error) {
 	if !ok {
 		return nil, fmt.Errorf("invalid request: %s", s)
 	}
-	if proto != Version {
-		return nil, fmt.Errorf("unsuported version: %s", proto)
+	if err := checkVersion(proto); err != nil {
+		return nil, err
 	}
 	req.Method = method
 	req.URL = url
