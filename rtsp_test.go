@@ -19,17 +19,17 @@ func TestResponse(t *testing.T) {
 			f, err := os.Open(file)
 			assert.NilError(t, err)
 			defer f.Close()
-			req, err := ReadResponse(bufio.NewReader(f))
+			res, err := ReadResponse(bufio.NewReader(f))
 			assert.NilError(t, err)
 			// encode it
 			var buf bytes.Buffer
-			err = req.Write(&buf)
+			err = res.Write(&buf)
 			assert.NilError(t, err)
 			// decode it again
-			req2, err := ReadResponse(bufio.NewReader(&buf))
+			res2, err := ReadResponse(bufio.NewReader(&buf))
 			assert.NilError(t, err)
 			// compare to original
-			assert.DeepEqual(t, req, req2)
+			assert.DeepEqual(t, res, res2)
 		})
 	}
 }
@@ -79,4 +79,38 @@ func TestFrame(t *testing.T) {
 	f2, err := ReadFrame(br)
 	assert.NilError(t, err)
 	assert.DeepEqual(t, f, f2)
+}
+
+func TestNewResponse(t *testing.T) {
+	res, err := NewResponse(StatusNotFound, []byte("Hello world"))
+	assert.NilError(t, err)
+	res.Header["CSeq"] = "100"
+	res.Header["foo"] = "bar"
+
+	// encode it
+	var buf bytes.Buffer
+	err = res.Write(&buf)
+	assert.NilError(t, err)
+
+	// decode it
+	res2, err := ReadResponse(bufio.NewReader(&buf))
+	assert.NilError(t, err)
+	assert.DeepEqual(t, res, res2)
+}
+
+func TestNewRequest(t *testing.T) {
+	req, err := NewRequest(MethodOptions, "rtsp://someurl", []byte("what"))
+	assert.NilError(t, err)
+	req.Header["CSeq"] = "1"
+	req.Header["Authorize"] = "secret"
+
+	// encode it
+	var buf bytes.Buffer
+	err = req.Write(&buf)
+	assert.NilError(t, err)
+
+	// decode it
+	req2, err := ReadRequest(bufio.NewReader(&buf))
+	assert.NilError(t, err)
+	assert.DeepEqual(t, req, req2)
 }
