@@ -28,14 +28,13 @@ const (
 type Request struct {
 	Method string
 	URL    *url.URL
-	Proto  string
 	Header Header
 	Body   []byte
 }
 
 // Write the request to the provided writer in the wire format.
 func (r Request) Write(w io.Writer) error {
-	if _, err := fmt.Fprintf(w, "%s %s %s\r\n", r.Method, r.URL, r.Proto); err != nil {
+	if _, err := fmt.Fprintf(w, "%s %s %s\r\n", r.Method, r.URL, Version); err != nil {
 		return err
 	}
 	if err := r.Header.Write(w); err != nil {
@@ -70,7 +69,6 @@ func NewRequest(method, endpoint string, body []byte) (*Request, error) {
 	req := &Request{
 		Method: method,
 		URL:    u,
-		Proto:  "RTSP/1.0",
 		Header: Header{},
 		Body:   body,
 	}
@@ -93,9 +91,11 @@ func ReadRequest(r *bufio.Reader) (req *Request, err error) {
 	if !ok {
 		return nil, fmt.Errorf("invalid request: %s", s)
 	}
+	if proto != Version {
+		return nil, fmt.Errorf("unsuported version: %s", proto)
+	}
 	req.Method = method
 	req.URL = url
-	req.Proto = proto
 
 	// read headers
 	req.Header, err = ReadHeader(r)

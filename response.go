@@ -8,9 +8,11 @@ import (
 	"strings"
 )
 
+// Version is the supported RTSP version
+const Version = "RTSP/1.0"
+
 // Response is a parsed RTSP response.
 type Response struct {
-	Proto      string
 	StatusCode int
 	Status     string
 	Header     Header
@@ -20,7 +22,7 @@ type Response struct {
 // Write the response to the provided writer in wire format.
 func (res Response) Write(w io.Writer) error {
 	if _, err := fmt.Fprintf(w, "%s %d %s\n",
-		res.Proto, res.StatusCode, res.Status,
+		Version, res.StatusCode, res.Status,
 	); err != nil {
 		return err
 	}
@@ -49,7 +51,6 @@ func (res Response) String() string {
 // The body may be nil.
 func NewResponse(code int, body []byte) (*Response, error) {
 	res := &Response{
-		Proto:      "RTSP/1.0",
 		StatusCode: code,
 		Status:     StatusText(code),
 		Header:     Header{},
@@ -73,7 +74,9 @@ func ReadResponse(r *bufio.Reader) (res *Response, err error) {
 	if !ok {
 		return nil, fmt.Errorf("invalid response: %s", s)
 	}
-	res.Proto = proto
+	if proto != Version {
+		return nil, fmt.Errorf("unsuported version: %s", proto)
+	}
 	res.StatusCode = code
 	res.Status = status
 
