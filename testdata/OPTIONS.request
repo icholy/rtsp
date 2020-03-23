@@ -1,0 +1,3 @@
+OPTIONS rtsp://localhost:8082/axis-media/media.amp?videocodec=h264 RTSP/1.0
+CSeq: 1
+

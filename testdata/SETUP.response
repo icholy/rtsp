@@ -1,0 +1,7 @@
+RTSP/1.0 200 OK
+CSeq: 5
+Transport: RTP/AVP/TCP;unicast;interleaved=0-1;ssrc=8CDD0008;mode="PLAY"
+Server: GStreamer RTSP server
+Session: PzbvN7ozqW6sn-We; timeout=10
+Date: Mon, 23 Mar 2020 14:00:00 GMT
+

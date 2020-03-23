@@ -1,0 +1,8 @@
+RTSP/1.0 200 OK
+RTP-Info: url=rtsp://localhost:8082/axis-media/media.amp/stream=0?videocodec=h264;seq=5490;rtptime=2264727363
+Range: npt=now-
+Server: GStreamer RTSP server
+Session: PzbvN7ozqW6sn-We; timeout=10
+Date: Mon, 23 Mar 2020 14:00:00 GMT
+CSeq: 6
+

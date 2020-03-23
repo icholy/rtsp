@@ -1,0 +1,4 @@
+DESCRIBE rtsp://localhost:8082/axis-media/media.amp?videocodec=h264 RTSP/1.0
+Accept: application/sdp
+CSeq: 2
+

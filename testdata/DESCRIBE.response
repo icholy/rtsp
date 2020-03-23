@@ -1,0 +1,30 @@
+RTSP/1.0 200 OK
+Content-Base: rtsp://localhost:8082/axis-media/media.amp/
+Server: GStreamer RTSP server
+Date: Mon, 23 Mar 2020 14:00:00 GMT
+Content-Length: 622
+CSeq: 3
+Content-Type: application/sdp
+
+v=0
+o=- 8906864812477689024 1 IN IP4 192.168.107.90
+s=Session streamed with GStreamer
+i=rtsp-server
+t=0 0
+a=tool:GStreamer
+a=type:broadcast
+a=range:npt=now-
+a=control:rtsp://localhost:8082/axis-media/media.amp?videocodec=h264
+m=video 0 RTP/AVP 96
+c=IN IP4 0.0.0.0
+b=AS:50000
+a=rtpmap:96 H264/90000
+a=fmtp:96 packetization-mode=1;profile-level-id=4d0029;sprop-parameter-sets=Z00AKeKQDwBE/LgLcBAQGkHiRFQ=,aO48gA==
+a=control:rtsp://localhost:8082/axis-media/media.amp/stream=0?videocodec=h264
+a=framerate:30.000000
+a=transform:1.000000,0.000000,0.000000;0.000000,1.000000,0.000000;0.000000,0.000000,1.000000
+SETUP rtsp://localhost:8082/axis-media/media.amp/stream=0?videocodec=h264 RTSP/1.0
+Blocksize: 64000
+Transport: RTP/AVP/TCP;unicast;interleaved=0-1
+CSeq: 3
+

@@ -1,0 +1,5 @@
+PLAY rtsp://localhost:8082/axis-media/media.amp?videocodec=h264 RTSP/1.0
+Session: PzbvN7ozqW6sn-We
+CSeq: 4
+Range: npt=0-
+

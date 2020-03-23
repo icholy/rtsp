@@ -1,0 +1,5 @@
+SETUP rtsp://localhost:8082/axis-media/media.amp/stream=0?videocodec=h264 RTSP/1.0
+Blocksize: 64000
+Transport: RTP/AVP/TCP;unicast;interleaved=0-1
+CSeq: 3
+
