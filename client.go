@@ -67,12 +67,12 @@ func (c *Client) Do(req *Request) (*Response, error) {
 	if _, err := c.auth.Authorize(req, nil); err != nil {
 		return nil, err
 	}
-	resp, err := c.roundTrip(req)
+	res, err := c.roundTrip(req)
 	if err != nil {
 		return nil, err
 	}
-	if resp.StatusCode == StatusUnauthorized {
-		retry, err := c.auth.Authorize(req, resp)
+	if res.StatusCode == StatusUnauthorized {
+		retry, err := c.auth.Authorize(req, res)
 		if err != nil {
 			return nil, err
 		}
@@ -80,7 +80,7 @@ func (c *Client) Do(req *Request) (*Response, error) {
 			return c.roundTrip(req)
 		}
 	}
-	return resp, nil
+	return res, nil
 }
 
 // Describe is a helper method for sending an DESCRIBE request.
