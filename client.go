@@ -5,7 +5,6 @@ import (
 	"errors"
 	"io"
 	"strconv"
-	"strings"
 	"sync"
 )
 
@@ -114,15 +113,15 @@ func (c *Client) Setup(endpoint, transport string) (*Response, error) {
 }
 
 // Session parses the session id from a SETUP response.
-func Session(resp *Response) (string, error) {
-	if resp.StatusCode != StatusOK {
-		return "", errors.New(resp.Status)
+func Session(res *Response) (string, error) {
+	if err := res.Err(); err != nil {
+		return "", err
 	}
-	fields := strings.Split(resp.Header["Session"], ";")
-	if len(fields) == 0 {
+	session, ok := res.Header.Field("Session", 0)
+	if !ok {
 		return "", errors.New("missing Sessions header")
 	}
-	return strings.TrimSpace(fields[0]), nil
+	return session, nil
 }
 
 // Play is a helper method for sending a PLAY request.
@@ -147,8 +146,8 @@ func (c *Client) Teardown(endpoint, session string) (*Response, error) {
 }
 
 type errResponse struct {
-	resp *Response
-	err  error
+	res *Response
+	err error
 }
 
 func (c *Client) recv() error {
@@ -163,8 +162,8 @@ func (c *Client) recv() error {
 		}
 		return c.frameHandler(f)
 	} else {
-		resp, err := ReadResponse(c.r)
-		c.respCh <- errResponse{resp: resp, err: err}
+		res, err := ReadResponse(c.r)
+		c.respCh <- errResponse{res: res, err: err}
 		return err
 	}
 }
@@ -184,7 +183,7 @@ func (c *Client) recvLoop() {
 func (c *Client) recvResponse() (*Response, error) {
 	select {
 	case re := <-c.respCh:
-		return re.resp, re.err
+		return re.res, re.err
 	case <-c.doneCh:
 		c.errMu.Lock()
 		defer c.errMu.Unlock()

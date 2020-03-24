@@ -11,6 +11,28 @@ import (
 // a request or response.
 type Header map[string]string
 
+// Param looks up the header by name and returns the corresponding value for
+// the provided key. The expected format is key1=value1;key2=value2 ...
+func (h Header) Param(name, key string) (string, bool) {
+	for _, p := range strings.Split(h[name], ";") {
+		param := strings.SplitN(p, "=", 2)
+		if len(param) == 2 && strings.TrimSpace(param[0]) == key {
+			return strings.TrimSpace(param[1]), true
+		}
+	}
+	return "", false
+}
+
+// Field looks up the header by name and returns the field for the provided
+// index. The expected format is field1;field2;field3 ...
+func (h Header) Field(name string, index int) (string, bool) {
+	fields := strings.Split(h[name], ";")
+	if index < 0 || index >= len(fields) {
+		return "", false
+	}
+	return strings.TrimSpace(fields[index]), true
+}
+
 // Write the header key/values to the provided writer
 func (h Header) Write(w io.Writer) error {
 	for key, value := range h {

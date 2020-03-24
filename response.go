@@ -16,6 +16,16 @@ type Response struct {
 	Body       []byte
 }
 
+// Err returns an error containing the status text if
+// the status code is not 2xx
+func (res Response) Err() error {
+	switch res.StatusCode {
+	case StatusOK, StatusContinue, StatusCreated:
+		return nil
+	}
+	return fmt.Errorf("rtsp: %s", res.Status)
+}
+
 // Write the response to the provided writer in wire format.
 func (res Response) Write(w io.Writer) error {
 	if _, err := fmt.Fprintf(w, "%s %d %s\n",
