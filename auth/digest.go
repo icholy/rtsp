@@ -50,8 +50,8 @@ func (a Digest) Authorize(req *rtsp.Request, resp *rtsp.Response) (bool, error) 
 	if resp == nil {
 		return true, nil
 	}
-	chal := resp.Header["WWW-Authenticate"]
-	c, err := parseChallenge(chal)
+
+	c, err := a.getChallenge(resp.Header["WWW-Authenticate"])
 	if err != nil {
 		return false, err
 	}
@@ -75,8 +75,18 @@ func (a Digest) Authorize(req *rtsp.Request, resp *rtsp.Response) (bool, error) 
 	}
 
 	// Make authenticated request.
-	req.Header["Authorization"] = auth
+	req.Header.Set("Authorization", auth)
 	return true, nil
+}
+
+func (a Digest) getChallenge(values []string) (*challenge, error) {
+	for _, v := range values {
+		c, err := parseChallenge(v)
+		if err == nil {
+			return c, nil
+		}
+	}
+	return nil, ErrBadChallenge
 }
 
 type challenge struct {
