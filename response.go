@@ -64,7 +64,7 @@ func NewResponse(code int, body []byte) (*Response, error) {
 		Body:       body,
 	}
 	if len(body) != 0 {
-		res.Header["Content-Length"] = strconv.Itoa(len(body))
+		res.Header.Set("Content-Length", strconv.Itoa(len(body)))
 	}
 	return res, nil
 }
@@ -94,7 +94,7 @@ func ReadResponse(r *bufio.Reader) (res *Response, err error) {
 	}
 
 	// read body
-	if cl, ok := res.Header["Content-Length"]; ok {
+	if cl := res.Header.Get("Content-Length"); cl != "" {
 		length, err := strconv.ParseInt(cl, 10, 64)
 		if err != nil {
 			return nil, fmt.Errorf("invalid Content-Length: %v", err)

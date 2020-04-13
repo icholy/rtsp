@@ -84,8 +84,8 @@ func TestFrame(t *testing.T) {
 func TestNewResponse(t *testing.T) {
 	res, err := NewResponse(StatusNotFound, []byte("Hello world"))
 	assert.NilError(t, err)
-	res.Header["CSeq"] = "100"
-	res.Header["foo"] = "bar"
+	res.Header.Set("CSeq", "100")
+	res.Header.Set("foo", "bar")
 
 	// encode it
 	var buf bytes.Buffer
@@ -101,8 +101,8 @@ func TestNewResponse(t *testing.T) {
 func TestNewRequest(t *testing.T) {
 	req, err := NewRequest(MethodOptions, "rtsp://someurl", []byte("what"))
 	assert.NilError(t, err)
-	req.Header["CSeq"] = "1"
-	req.Header["Authorize"] = "secret"
+	req.Header.Set("CSeq", "1")
+	req.Header.Set("Authorize", "secret")
 
 	// encode it
 	var buf bytes.Buffer

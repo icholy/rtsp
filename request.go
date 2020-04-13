@@ -73,7 +73,7 @@ func NewRequest(method, endpoint string, body []byte) (*Request, error) {
 		Body:   body,
 	}
 	if len(body) > 0 {
-		req.Header["Content-Length"] = strconv.Itoa(len(body))
+		req.Header.Set("Content-Length", strconv.Itoa(len(body)))
 	}
 	return req, nil
 }
@@ -104,7 +104,7 @@ func ReadRequest(r *bufio.Reader) (req *Request, err error) {
 	}
 
 	// read body
-	if cl, ok := req.Header["Content-Length"]; ok {
+	if cl := req.Header.Get("Content-Length"); cl != "" {
 		length, err := strconv.ParseInt(cl, 10, 64)
 		if err != nil {
 			return nil, fmt.Errorf("invalid Content-Length: %v", err)

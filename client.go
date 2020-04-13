@@ -89,7 +89,7 @@ func (c *Client) Describe(endpoint string) (*Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	req.Header["Accept"] = "application/sdp"
+	req.Header.Set("Accept", "application/sdp")
 	return c.Do(req)
 }
 
@@ -108,7 +108,7 @@ func (c *Client) Setup(endpoint, transport string) (*Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	req.Header["Transport"] = transport
+	req.Header.Set("Transport", transport)
 	return c.Do(req)
 }
 
@@ -130,8 +130,8 @@ func (c *Client) Play(endpoint, session string) (*Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	req.Header["Session"] = session
-	req.Header["Range"] = "npt=0.000-"
+	req.Header.Set("Session", session)
+	req.Header.Set("Range", "npt=0.000-")
 	return c.Do(req)
 }
 
@@ -141,7 +141,7 @@ func (c *Client) Teardown(endpoint, session string) (*Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	req.Header["Session"] = session
+	req.Header.Set("Session", session)
 	return c.Do(req)
 }
 
@@ -197,10 +197,10 @@ func (c *Client) roundTrip(req *Request) (*Response, error) {
 	clone.Header = req.Header.Clone()
 	// add the sequence number
 	c.cseq++
-	clone.Header["CSeq"] = strconv.Itoa(c.cseq)
+	clone.Header.Set("CSeq", strconv.Itoa(c.cseq))
 	// add the user-agent
 	if c.userAgent != "" {
-		clone.Header["User-Agent"] = c.userAgent
+		clone.Header.Set("User-Agent", c.userAgent)
 	}
 	// make the request
 	if err := clone.Write(c.w); err != nil {
