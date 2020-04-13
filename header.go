@@ -89,7 +89,9 @@ func ReadHeader(r *bufio.Reader) (Header, error) {
 func (h Header) Clone() Header {
 	h2 := make(Header, len(h))
 	for k, v := range h {
-		h2[k] = v
+		v2 := make([]string, len(v))
+		copy(v2, v)
+		h2[k] = v2
 	}
 	return h2
 }
