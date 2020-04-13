@@ -1,5 +1,5 @@
 
-# RTSP/1.0
+# RTSP 1.0
 
 > A low level package for writing rtsp servers and clients
 
