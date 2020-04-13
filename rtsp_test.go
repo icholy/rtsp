@@ -114,3 +114,15 @@ func TestNewRequest(t *testing.T) {
 	assert.NilError(t, err)
 	assert.DeepEqual(t, req, req2)
 }
+
+func TestHeaderClone(t *testing.T) {
+	h := Header{}
+	h.Set("foo", "bar")
+	h.Add("foo", "baz")
+
+	h2 := h.Clone()
+	h2.Set("foo", "test")
+
+	assert.DeepEqual(t, h["foo"], []string{"bar", "baz"})
+	assert.DeepEqual(t, h2["foo"], []string{"test"})
+}
