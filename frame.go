@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
+	"math"
 )
 
 // Frame of interleaved binary data.
@@ -14,20 +15,16 @@ type Frame struct {
 	Data    []byte
 }
 
-type frameHeader struct {
-	Magic   byte
-	Channel uint8
-	Length  uint16
-}
-
 // Write the interleaved frame to the provided writer.
 func (f Frame) Write(w io.Writer) error {
-	hdr := frameHeader{
-		Magic:   '$',
-		Channel: uint8(f.Channel),
-		Length:  uint16(len(f.Data)),
+	if f.Channel < 0 || f.Channel > math.MaxUint8 {
+		return fmt.Errorf("invalid channel: %d", f.Channel)
 	}
-	if err := binary.Write(w, binary.BigEndian, hdr); err != nil {
+	var hdr [4]byte
+	hdr[0] = '$'
+	hdr[1] = uint8(f.Channel)
+	binary.BigEndian.PutUint16(hdr[2:], uint16(len(f.Data)))
+	if _, err := w.Write(hdr[:]); err != nil {
 		return err
 	}
 	if _, err := w.Write(f.Data); err != nil {
@@ -38,19 +35,19 @@ func (f Frame) Write(w io.Writer) error {
 
 // ReadFrame reads an interleaved binary frame from the reader.
 func ReadFrame(r io.Reader) (Frame, error) {
-	var hdr frameHeader
-	if err := binary.Read(r, binary.BigEndian, &hdr); err != nil {
+	var hdr [4]byte
+	if _, err := io.ReadFull(r, hdr[:]); err != nil {
 		return Frame{}, err
 	}
-	if hdr.Magic != '$' {
-		return Frame{}, fmt.Errorf("invalid magic prefix: %v", hdr.Magic)
+	if hdr[0] != '$' {
+		return Frame{}, fmt.Errorf("invalid magic prefix: %v", hdr[0])
 	}
-	data := make([]byte, hdr.Length)
+	data := make([]byte, binary.BigEndian.Uint16(hdr[2:]))
 	if _, err := io.ReadFull(r, data); err != nil {
 		return Frame{}, err
 	}
 	return Frame{
-		Channel: int(hdr.Channel),
+		Channel: int(hdr[1]),
 		Data:    data,
 	}, nil
 }
