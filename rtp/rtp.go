@@ -43,8 +43,11 @@ var order = binary.BigEndian
 
 // Parse validates a packed RTP packet and converts it into a sparse structure.
 func Parse(buf []byte) (*Packet, error) {
+	if len(buf) < HeaderSize {
+		return nil, errors.New("RTP header too short")
+	}
 	if (buf[0] & 0xC0) != RtpVersion {
-		return nil, errors.New("Invalid version of RTP packet")
+		return nil, errors.New("RTP version not supported")
 	}
 	packet := &Packet{
 		VPXCC: buf[0],
@@ -53,27 +56,31 @@ func Parse(buf []byte) (*Packet, error) {
 		TS:    order.Uint32(buf[4:]),
 		SSRC:  order.Uint32(buf[8:]),
 	}
-
 	off := HeaderSize
 	packet.CSRC = make([]uint32, packet.ContributingCount())
+	if len(buf[off:]) < len(packet.CSRC)*4 {
+		return nil, errors.New("RTP incorrect contributing count")
+	}
 	for i := range packet.CSRC {
 		packet.CSRC[i] = order.Uint32(buf[off:])
 		off += 4
 	}
-
 	if packet.Extension() {
+		if len(buf[off:]) < 4 {
+			return nil, errors.New("RTP extension header missing")
+		}
 		packet.XH = order.Uint16(buf[off:])
 		packet.XL = order.Uint16(buf[off+2:])
 		off += 4
 		if packet.XL > 0 {
+			if len(buf[off:]) < int(packet.XL)*4 {
+				return nil, errors.New("RTP extension data missing")
+			}
 			packet.XD = buf[off : off+int(packet.XL)*4]
 			off += int(packet.XL) * 4
 		}
 	}
-
 	packet.Payload = buf[off:]
-
-	//s.rtpChan <- packet
 	return packet, nil
 }
 
